@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Seus Flashcards</h2>
+
+<div class="acoes">
+    <a class="btn" href="{{ url_for('criar') }}">➕ Criar Novo</a>
+    <a class="btn" href="{{ url_for('estudar') }}">📖 Estudar</a>
+</div>
+
+{% if cards %}
+    <ul class="lista-cards">
+        {% for card in cards %}
+            <li><b>{{ card.frente }}</b> → {{ card.verso }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>Você ainda não tem nenhum flashcard. Clique em "Criar Novo".</p>
+{% endif %}
+{% endblock %}

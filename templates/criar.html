@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Criar Flashcard</h2>
+
+<form method="POST" class="formulario">
+    <label>Pergunta (frente):</label>
+    <input type="text" name="frente" required>
+
+    <label>Resposta (verso):</label>
+    <input type="text" name="verso" required>
+
+    <button type="submit">Salvar</button>
+</form>
+
+<p class="links"><a href="{{ url_for('home') }}">← Voltar</a></p>
+{% endblock %}

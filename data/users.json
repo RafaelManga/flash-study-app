@@ -1,0 +1,16 @@
+{
+    "teste@gmail.com": {
+        "senha": "test123"
+    },
+    "teste1@gmail.com": {
+        "senha": "teste123"
+    },
+    "teste3@gmail.com": {
+        "nome": "Rafael",
+        "senha": "teste123"
+    },
+    "teste4@gmail.com": {
+        "nome": "Almeida",
+        "senha": "teste1234"
+    }
+}

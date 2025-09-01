@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Login</h2>
+{% if erro %}<p class="erro">{{ erro }}</p>{% endif %}
+{% if mensagem %}<p class="mensagem">{{ mensagem }}</p>{% endif %}
+
+<form method="POST" class="formulario">
+    <label>Email:</label>
+    <input type="email" name="email" required>
+
+    <label>Senha:</label>
+    <input type="password" name="senha" required>
+
+    <button type="submit">Entrar</button>
+</form>
+
+<p class="links">
+    <a href="{{ url_for('register') }}">Cadastrar</a> |
+    <a href="{{ url_for('reset_password') }}">Esqueceu a senha?</a>
+</p>
+{% endblock %}
