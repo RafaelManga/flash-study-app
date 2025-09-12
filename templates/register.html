@@ -1,20 +1,130 @@
 {% extends "base.html" %}
+{% block title %}Criar Conta - FlashStudy{% endblock %}
+
 {% block content %}
-<h2>Criar Conta</h2>
-{% if erro %}<p class="erro">{{ erro }}</p>{% endif %}
+<div class="card" style="max-width: 520px; margin: 40px auto;">
+    <div style="text-align: center; margin-bottom: 32px;">
+        <h1 style="font-size: 2.2rem; margin-bottom: 12px;">🎉 Criar Conta</h1>
+        <p style="color: var(--muted); font-size: 1.1rem;">
+            Junte-se à comunidade FlashStudy e revolucione seus estudos
+        </p>
+    </div>
 
-<form method="POST" class="formulario">
-    <label>Nome:</label>
-    <input type="text" name="nome" required>
+    <form method="post" class="form">
+        <div class="form-group">
+            <label for="nome">👤 Nome Completo</label>
+            <input type="text" id="nome" name="nome" required
+                   placeholder="Seu nome completo" autocomplete="name">
+        </div>
 
-    <label>Email:</label>
-    <input type="email" name="email" required>
+        <div class="form-group">
+            <label for="email">📧 Email</label>
+            <input type="email" id="email" name="email" required
+                   placeholder="seu@email.com" autocomplete="email">
+        </div>
 
-    <label>Senha:</label>
-    <input type="password" name="senha" required>
+        <div class="form-group">
+            <label for="senha">🔒 Senha</label>
+            <input type="password" id="senha" name="senha" required
+                   placeholder="Mínimo 6 caracteres" autocomplete="new-password" minlength="6">
+            <small style="color: var(--muted); font-size: 0.85rem;">
+                Use pelo menos 6 caracteres para maior segurança
+            </small>
+        </div>
 
-    <button type="submit">Cadastrar</button>
-</form>
+        <div class="form-group">
+            <label for="data_nascimento">📅 Data de Nascimento (Opcional)</label>
+            <input type="date" id="data_nascimento" name="data_nascimento"
+                   autocomplete="bday">
+        </div>
 
-<p class="links"><a href="{{ url_for('login') }}">← Voltar para login</a></p>
+        <div class="form-actions">
+            <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem;">
+                🚀 Criar Minha Conta
+            </button>
+        </div>
+    </form>
+
+    <hr>
+
+    <div style="text-align: center;">
+        <p style="color: var(--muted); margin-bottom: 16px;">
+            Já tem uma conta?
+        </p>
+        <a href="{{ url_for('login') }}" class="btn ghost">
+            🔑 Fazer Login
+        </a>
+    </div>
+</div>
+
+<!-- Benefícios -->
+<div class="card" style="max-width: 720px; margin: 24px auto;">
+    <h3 style="text-align: center; margin-bottom: 24px;">🎁 O que você ganha ao se cadastrar</h3>
+    <div style="display: grid; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--panel); border-radius: 12px;">
+            <span style="font-size: 2rem;">🤖</span>
+            <div>
+                <strong>IA Gratuita</strong><br>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    Gere até 15 flashcards por vez usando inteligência artificial
+                </span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--panel); border-radius: 12px;">
+            <span style="font-size: 2rem;">☁️</span>
+            <div>
+                <strong>Sincronização na Nuvem</strong><br>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    Seus baralhos ficam salvos e sincronizados automaticamente
+                </span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--panel); border-radius: 12px;">
+            <span style="font-size: 2rem;">👥</span>
+            <div>
+                <strong>Sistema Social</strong><br>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    Adicione amigos, compartilhe baralhos e estude em grupo
+                </span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--panel); border-radius: 12px;">
+            <span style="font-size: 2rem;">🏆</span>
+            <div>
+                <strong>Sistema de Pontuação</strong><br>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    Ganhe pontos nos desafios e acompanhe seu progresso
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Validação em tempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const senhaInput = document.getElementById('senha');
+    const form = document.querySelector('form');
+
+    senhaInput.addEventListener('input', function() {
+        const senha = this.value;
+        const isValid = senha.length >= 6;
+
+        this.style.borderColor = isValid ? 'var(--success)' : 'var(--danger)';
+    });
+
+    // Animação de entrada
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 200);
+    });
+});
+</script>
 {% endblock %}

@@ -1,6 +1,241 @@
+{% extends "base.html" %}
+{% block title %}Compartilhar {{ baralho.nome }} - FlashStudy{% endblock %}
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+{% block content %}
+<div class="card" style="max-width: 720px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 32px;">
+        <h2 style="font-size: 2rem; margin-bottom: 12px;">🤝 Compartilhar Baralho</h2>
+    <div style="background: var(--panel); padding: 20px; border-radius: 12px; margin-bottom: 24px; border-left: 4px solid '{{ baralho.cor|default('#3b82f6') }}';">
+      <h3 style="margin: 0 0 8px 0; color: '{{ baralho.cor|default('#3b82f6') }}'; font-size: 1.4rem;">{{ baralho.nome }}</h3>
+            <p style="color: var(--muted); margin: 0; display: flex; align-items: center; justify-content: center; gap: 16px;">
+                <span>📚 {{ baralho.cards|length }} cards</span>
+                <span>•</span>
+                <span>🎨 Baralho personalizado</span>
+            </p>
+        </div>
+    </div>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const cards = document.querySelectorAll('.card, .friend-invite-card');
+  cards.forEach((card, index) => {
+    card.style.opacity = "0";
+    card.style.transform = "translateY(20px)";
+    setTimeout(() => {
+      card.style.transition = "all 0.4s ease";
+      card.style.opacity = "1";
+      card.style.transform = "translateY(0)";
+    }, index * 80);
+  });
 
+  document.querySelectorAll('form[action*="enviar_convite_baralho"]').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      const friendName = this.querySelector('.friend-invite-card div div').textContent;
+      const baralhoName = '{{ baralho.nome }}';
+      if(!confirm(`Enviar convite para ${friendName} colaborar no baralho "${baralhoName}"?`)) {
+        e.preventDefault();
+      }
+    });
+  });
+});
+</script>
+
+
+
+<!-- Botão para abrir modal de compartilhamento entre amigos -->
+<div style="text-align: center; margin-bottom: 24px;">
+  <button class="btn purple" onclick="document.getElementById('modal-amigos').style.display='block'">
+    👥 Compartilhar entre amigos
+  </button>
+</div>
+
+<!-- Modal de amigos -->
+<div id="modal-amigos" style="display:none; position:fixed; inset:0; width:100vw; height:100vh; background:rgba(0,0,0,0.45); z-index:1000;">
+  <div style="position:absolute; top:10vh; left:10vw; background:var(--bg); width:95vw; max-width:420px; max-height:80vh; overflow-y:auto; border-radius:16px; box-shadow:0 8px 32px #0002; padding:32px 24px 24px 24px; display:flex; flex-direction:column;">
+    <button onclick="document.getElementById('modal-amigos').style.display='none'" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:2rem; color:var(--muted); cursor:pointer; line-height:1;">&times;</button>
+    <h3 style="margin-bottom: 18px; text-align:center;">👥 Compartilhar com Amigos</h3>
+    {% if amigos %}
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      {% for amigo in amigos %}
+      <form method="post" action="{{ url_for('enviar_convite_baralho') }}" class="friend-invite-card" style="display:flex; align-items:center; gap:12px; background:var(--panel); border-radius:8px; padding:10px 14px;">
+        <input type="hidden" name="baralho_id" value="{{ baralho_id }}">
+        <input type="hidden" name="friend_id" value="{{ amigo.id }}">
+        {% if amigo.avatar %}
+          <img src="{{ url_for('static', filename=amigo.avatar) }}" alt="Avatar" class="friend-avatar" style="width:32px; height:32px;">
+        {% else %}
+          <div class="friend-avatar" style="background: var(--primary); width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; color:#fff;">
+            {{ amigo.nome[0].upper() }}
+          </div>
+        {% endif %}
+        <span style="flex:1; font-weight:500;">{{ amigo.nome }}</span>
+        <button type="submit" class="btn tiny purple">Enviar Convite</button>
+      </form>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center; color:var(--muted); margin:24px 0;">Você ainda não tem amigos para compartilhar.<br><a href="{{ url_for('amigos') }}" class="btn" style="margin-top:12px;">Adicionar Amigos</a></div>
+    {% endif %}
+  </div>
+</div>
+
+    <!-- Link Público -->
+    <div style="margin-bottom: 32px;">
+        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+            🔗 Link Público de Compartilhamento
+        </h3>
+        <p style="color: var(--muted); margin-bottom: 16px; line-height: 1.6;">
+            Qualquer pessoa com este link pode visualizar e estudar este baralho (somente leitura):
+        </p>
+        <div style="display: flex; gap: 12px; align-items: center; background: var(--panel); padding: 16px; border-radius: 12px; border: 1px solid var(--border);">
+            <input type="text" readonly
+                   value="{{ request.url_root }}public/baralho/{{ usuario.id }}/{{ baralho_id }}"
+                   style="flex: 1; background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: var(--text); font-family: monospace; font-size: 0.9rem;"
+                   onclick="this.select()" id="link-publico">
+            <button class="btn tiny" onclick="copiarLink(event)" style="white-space: nowrap;">
+                📋 Copiar Link
+            </button>
+        </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="form-actions" style="justify-content: center; border-top: 1px solid var(--border); padding-top: 24px;">
+  <a href="{{ url_for('estudar', baralho_id=baralho_id) }}" class="btn ghost">
+            ← Voltar ao Baralho
+        </a>
+  <a href="{{ url_for('home') }}" class="btn ghost">
+            🏠 Página Inicial
+        </a>
+    </div>
+</div>
+
+<!-- Card de Informações -->
+<div class="card" style="max-width: 720px; margin: 24px auto 0;">
+    <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+        💡 Como funciona o compartilhamento
+    </h3>
+    <div style="display: grid; gap: 16px;">
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--panel); border-radius: 12px;">
+            <span style="font-size: 1.5rem;">📤</span>
+            <div>
+                <strong>Enviar Convites</strong><br>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    Selecione amigos para enviar convites de colaboração. Eles poderão criar, editar e excluir cards.
+                </span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--panel); border-radius: 12px;">
+            <span style="font-size: 1.5rem;">🤝</span>
+            <div>
+                <strong>Colaboração em Tempo Real</strong><br>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    Amigos que aceitarem o convite poderão colaborar editando o mesmo baralho simultaneamente.
+                </span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--panel); border-radius: 12px;">
+            <span style="font-size: 1.5rem;">⏰</span>
+            <div>
+                <strong>Cooldown de Convites</strong><br>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    Só é possível enviar um novo convite após 30 minutos se o anterior for recusado.
+                </span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--panel); border-radius: 12px;">
+            <span style="font-size: 1.5rem;">👑</span>
+            <div>
+                <strong>Controle Total</strong><br>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    Como dono do baralho, você mantém controle total e pode gerenciar permissões dos membros.
+                </span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--panel); border-radius: 12px;">
+            <span style="font-size: 1.5rem;">🔗</span>
+            <div>
+                <strong>Link Público</strong><br>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    O link público permite que qualquer pessoa visualize e estude o baralho, mas não pode editá-lo.
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copiarLink(event) {
+  const input = document.getElementById("link-publico");
+  input.select();
+  input.setSelectionRange(0, 99999); // Para dispositivos móveis
+  const btn = event.target;
+  const textoOriginal = btn.textContent;
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(input.value).then(() => {
+      btn.textContent = "✅ Copiado!";
+      btn.style.background = "linear-gradient(135deg, var(--success), #16a34a)";
+      btn.style.transform = "scale(1.05)";
+      setTimeout(() => {
+        btn.textContent = textoOriginal;
+        btn.style.background = "";
+        btn.style.transform = "";
+      }, 2000);
+    }).catch(err => {
+      fallbackCopy();
+    });
+  } else {
+    fallbackCopy();
+  }
+
+  function fallbackCopy() {
+    try {
+      document.execCommand("copy");
+      btn.textContent = "✅ Copiado!";
+      setTimeout(() => {
+        btn.textContent = textoOriginal;
+      }, 2000);
+    } catch (e) {
+      alert("Erro ao copiar. Tente selecionar o texto manualmente.");
+    }
+  }
+}
+
+// Animação de entrada
+document.addEventListener("DOMContentLoaded", function() {
+  const cards = document.querySelectorAll('.card, .friend-invite-card');
+  cards.forEach((card, index) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+
+    setTimeout(() => {
+      card.style.transition = 'all 0.4s ease';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, index * 100);
+  });
+
+  // Confirmação antes de enviar convite
+  document.querySelectorAll('form[action*="enviar_convite_baralho"]').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      const friendName = this.querySelector('.friend-invite-card div div').textContent;
+  const baralhoName = "{{ baralho.nome }}";
+
+      if (!confirm(`Tem certeza que deseja enviar um convite do baralho "${baralhoName}" para ${friendName}?`)) {
+        e.preventDefault();
+      }
+    });
+  });
+});
+</script>
+{% endblock %}
+
+### static/css/style.css
+```css
+/* static/css/style.css */
+
+/* Importação de Fontes */
+@import url(\'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap\');
+
+/* Tema Escuro (Padrão) */
 :root[data-theme="dark"] {
   --bg: #0a0a0a;
   --panel: #1a1a1a;
@@ -15,7 +250,7 @@
   --cyan: #06b6d4;
   --pink: #ec4899;
   --lime: #84cc16;
-  --font-sans: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --font-sans: \'Inter\', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -23,6 +258,7 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
+/* Tema Claro */
 :root[data-theme="light"] {
   --bg: #ffffff;
   --panel: #f8fafc;
@@ -37,7 +273,7 @@
   --cyan: #06b6d4;
   --pink: #ec4899;
   --lime: #84cc16;
-  --font-sans: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --font-sans: \'Inter\', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -201,7 +437,7 @@ hr {
 }
 
 .theme-toggle::before {
-  content: '';
+  content: \'\';
   position: absolute;
   top: 0;
   left: -100%;
@@ -238,7 +474,7 @@ hr {
 }
 
 .card::before {
-  content: '';
+  content: \'\';
   position: absolute;
   top: 0;
   left: 0;
@@ -263,7 +499,6 @@ hr {
 .btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
   padding: 12px 24px;
   border-radius: 12px;
@@ -281,7 +516,7 @@ hr {
 }
 
 .btn::before {
-  content: '';
+  content: \'\';
   position: absolute;
   top: 0;
   left: -100%;
@@ -458,7 +693,7 @@ hr {
 }
 
 .baralho-card::before {
-  content: '';
+  content: \'\';
   position: absolute;
   top: 0;
   left: 0;
@@ -528,9 +763,7 @@ hr {
   cursor: pointer;
 }
 
-
-/* Flip apenas via classe JS, não mais no hover */
-.flip-card.flipped .flip-card-inner {
+.flip-card:hover .flip-card-inner {
   transform: rotateY(180deg);
 }
 
@@ -603,7 +836,7 @@ hr {
 }
 
 .profile-header::before {
-  content: '';
+  content: \'\';
   position: absolute;
   top: 0;
   left: 0;
@@ -640,7 +873,7 @@ hr {
   background: var(--bg);
   padding: 12px 16px;
   border-radius: 10px;
-  font-family: 'Courier New', monospace;
+  font-family: \'Courier New\', monospace;
   font-size: 0.9rem;
   margin: 12px 0;
   border: 1px solid var(--border);
@@ -673,7 +906,7 @@ hr {
 }
 
 .friend-card::before {
-  content: '';
+  content: \'\';
   position: absolute;
   top: 0;
   left: -100%;
@@ -699,7 +932,12 @@ hr {
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
   box-shadow: var(--shadow-sm);
   transition: transform 0.3s ease;
 }
@@ -736,7 +974,7 @@ hr {
 }
 
 .friend-invite-card::before {
-  content: '';
+  content: \'\';
   position: absolute;
   top: 0;
   left: -100%;
@@ -774,7 +1012,7 @@ hr {
 }
 
 .desafio-timer::before {
-  content: '';
+  content: \'\';
   position: absolute;
   top: 0;
   left: -100%;
@@ -839,7 +1077,7 @@ hr {
 }
 
 .stat-card::before {
-  content: '';
+  content: \'\';
   position: absolute;
   top: 0;
   left: 0;
@@ -1037,7 +1275,7 @@ hr {
 }
 
 .loading::after {
-  content: '';
+  content: \'\';
   position: absolute;
   top: 0;
   left: -100%;

@@ -1,20 +1,98 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR" data-theme="{{ usuario.tema if usuario else 'dark' }}">
 <head>
     <meta charset="UTF-8">
-    <title>FlashStudy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FlashStudy{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
 </head>
 <body>
-    <header>
-        <h1>📚 FlashStudy</h1>
-        {% if session.usuario %}
-            <p>Bem-vindo, {{ session.usuario.nome }} | <a href="{{ url_for('logout') }}">Sair</a></p>
-        {% endif %}
-        <hr>
-    </header>
-    <main>
+    {% if usuario %}
+    <div class="topbar">
+        <a href="{{ url_for('home') }}" class="brand">🧠 FlashStudy</a>
+
+        <nav class="main-nav">
+            <a href="{{ url_for('home') }}" class="nav-item">🏠 Início</a>
+            <a href="{{ url_for('criar_card') }}" class="nav-item">➕ Criar Card</a>
+            <a href="{{ url_for('gerar_ia') }}" class="nav-item">🤖 IA</a>
+            <a href="{{ url_for('desafio') }}" class="nav-item">🎯 Desafio</a>
+            <a href="{{ url_for('amigos') }}" class="nav-item">
+                👥 Amigos
+                {% if notificacoes_count > 0 %}
+                <span class="notification-badge">{{ notificacoes_count }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('perfil') }}" class="nav-item">👤 Perfil</a>
+
+            <button class="theme-toggle" onclick="alternarTema()">
+                <span class="theme-icon">{{ '🌙' if usuario.tema == 'light' else '☀️' }}</span>
+            </button>
+
+            <a href="{{ url_for('logout') }}" class="nav-item" style="color: var(--danger);">🚪 Sair</a>
+        </nav>
+    </div>
+    {% endif %}
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
-    </main>
+    </div>
+
+    <script>
+        // Alternância de tema
+        async function alternarTema() {
+            try {
+                const response = await fetch('{{ url_for("alternar_tema") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.documentElement.setAttribute('data-theme', data.tema);
+
+                    // Atualiza o ícone
+                    const themeIcon = document.querySelector('.theme-icon');
+                    themeIcon.textContent = data.tema === 'light' ? '🌙' : '☀️';
+                }
+            } catch (error) {
+                console.error('Erro ao alternar tema:', error);
+            }
+        }
+
+        // Heartbeat para manter status online
+        {% if usuario %}
+        setInterval(() => {
+            fetch('{{ url_for("heartbeat") }}', { method: 'POST' })
+                .catch(err => console.log('Heartbeat error:', err));
+        }, 60000); // A cada minuto
+        {% endif %}
+
+        // Auto-dismiss flash messages
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.querySelectorAll('.flash');
+            flashMessages.forEach(flash => {
+                setTimeout(() => {
+                    flash.style.opacity = '0';
+                    flash.style.transform = 'translateY(-20px)';
+                    setTimeout(() => flash.remove(), 300);
+                }, 5000);
+            });
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
 </body>
 </html>

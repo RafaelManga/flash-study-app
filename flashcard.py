@@ -1,12 +1,14 @@
+# Representação de um flashcard
+
 class Flashcard:
-    def __init__(self, frente, verso):
+    def __init__(self, frente, verso, card_id):
         self.frente = frente
         self.verso = verso
-        self.acertos = 0
-        self.erros = 0
+        self.id = card_id
 
-    def registrar_resposta(self, acertou: bool):
-        if acertou:
-            self.acertos += 1
-        else:
-            self.erros += 1
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "frente": self.frente,
+            "verso": self.verso
+        }

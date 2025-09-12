@@ -1,0 +1,94 @@
+
+
+{% extends "base.html" %}
+{% block title %}Perfil de {{ amigo.nome }} - FlashStudy{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 720px; margin: 0 auto;">
+    <div class="profile-header">
+        {% if amigo.avatar %}
+            <img src="{{ url_for('static', filename=amigo.avatar) }}" alt="Avatar" class="profile-avatar">
+        {% else %}
+            <div class="profile-avatar" style="background: linear-gradient(135deg, var(--primary), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 700; color: white;">
+                {{ amigo.nome[0].upper() }}
+            </div>
+        {% endif %}
+        <div class="profile-info">
+            <h2>{{ amigo.nome }}</h2>
+            <p style="color: var(--muted); margin-bottom: 8px;">ID: <span class="user-id" id="amigo-id">{{ amigo.id }}</span>
+                <button class="btn tiny" style="margin-left:8px; padding:2px 8px; font-size:0.9em;" onclick="copiarTexto('{{ amigo.id }}', event)">Copiar</button>
+            </p>
+            <p style="color: var(--muted); margin-bottom: 8px;">Pontos: {{ amigo.points }}</p>
+            {% if amigo.frase_pessoal %}
+                <p style="color: var(--text); font-style: italic; margin-top: 16px; padding: 12px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border);">
+                    "{{ amigo.frase_pessoal }}"
+                </p>
+            {% endif %}
+            {% if amigo.data_nascimento %}
+                <p style="color: var(--muted); margin-bottom: 8px;">Data de nascimento: {{ amigo.data_nascimento }}</p>
+            {% endif %}
+            <div style="margin-top: 16px;">
+                <strong>Conquistas:</strong>
+                <span style="color: var(--primary);">(em breve)</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions" style="justify-content: center; border-top: 1px solid var(--border); padding-top: 24px;">
+        <a href="{{ url_for('amigos') }}" class="btn ghost">
+            ← Voltar para Amigos
+        </a>
+        <form action="{{ url_for('remover_amigo', friend_id=amigo.id) }}" method="post" onsubmit="return confirm('Tem certeza que deseja remover {{ amigo.nome }} como amigo?');" style="display: inline;">
+            <button type="submit" class="btn danger">Remover Amigo</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function copiarTexto(texto, event) {
+    event.preventDefault();
+    const btn = event.target;
+    const textoOriginal = btn.textContent;
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(texto).then(() => {
+            btn.textContent = 'Copiado!';
+            btn.style.background = 'linear-gradient(135deg, var(--success), #16a34a)';
+            setTimeout(() => {
+                btn.textContent = textoOriginal;
+                btn.style.background = '';
+            }, 1500);
+        });
+    } else {
+        // Fallback
+        const tempInput = document.createElement('input');
+        tempInput.value = texto;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        try {
+            document.execCommand('copy');
+            btn.textContent = 'Copiado!';
+            btn.style.background = 'linear-gradient(135deg, var(--success), #16a34a)';
+            setTimeout(() => {
+                btn.textContent = textoOriginal;
+                btn.style.background = '';
+            }, 1500);
+        } catch (e) {
+            alert('Erro ao copiar. Copie manualmente.');
+        }
+        document.body.removeChild(tempInput);
+    }
+}
+// Animação de entrada
+document.addEventListener("DOMContentLoaded", function() {
+    const card = document.querySelector('.card');
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(30px)';
+
+    setTimeout(function() {
+        card.style.transition = 'all 0.6s ease';
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+    }, 100);
+});
+</script>
+{% endblock %}

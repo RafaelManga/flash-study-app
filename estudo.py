@@ -1,10 +1,11 @@
-def iniciar_sessao(baralho):
-    if not baralho.cards:
-        print("⚠ Nenhum flashcard disponível.")
-        return
+# Funções relacionadas ao estudo de baralhos
 
-    print("\n--- Sessão de Estudo ---")
-    for card in baralho.cards:
-        print(f"\nPergunta: {card.frente}")
-        input("Pressione Enter para ver a resposta...")
-        print(f"Resposta: {card.verso}")
+import random
+
+def embaralhar_cartas(cartas):
+    cartas_copy = list(cartas)
+    random.shuffle(cartas_copy)
+    return cartas_copy
+
+def selecionar_cartas(cartas, quantidade):
+    return cartas[:quantidade]

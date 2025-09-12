@@ -1,19 +1,142 @@
 {% extends "base.html" %}
-{% block content %}
-<h2>Seus Flashcards</h2>
+{% block title %}Início - FlashStudy{% endblock %}
 
-<div class="acoes">
-    <a class="btn" href="{{ url_for('criar') }}">➕ Criar Novo</a>
-    <a class="btn" href="{{ url_for('estudar') }}">📖 Estudar</a>
+{% block content %}
+<div style="text-align: center; margin-bottom: 40px;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 16px;">
+        Bem-vindo ao FlashStudy, {{ usuario.nome }}! 🎉
+    </h1>
+    <p style="color: var(--muted); font-size: 1.2rem; line-height: 1.6;">
+        Sua plataforma inteligente para estudos com flashcards e IA
+    </p>
 </div>
 
-{% if cards %}
-    <ul class="lista-cards">
-        {% for card in cards %}
-            <li><b>{{ card.frente }}</b> → {{ card.verso }}</li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>Você ainda não tem nenhum flashcard. Clique em "Criar Novo".</p>
-{% endif %}
+
+
+
+<!-- Navegação Rápida -->
+<nav style="display: flex; gap: 16px; margin-bottom: 18px; justify-content: flex-end;">
+    <a href="#meus-baralhos" style="font-weight: 600; color: var(--primary); text-decoration: none; padding: 8px 18px; border-radius: 8px; transition: background .2s;">Meus Baralhos</a>
+    <a href="#baralhos-compartilhados" style="font-weight: 600; color: var(--purple); text-decoration: none; padding: 8px 18px; border-radius: 8px; transition: background .2s;">Baralhos Compartilhados</a>
+</nav>
+<!-- Ações Rápidas e Navegação de Baralhos -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px;">
+    <a href="{{ url_for('criar_card') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">➕</div>
+            <h3 style="margin-bottom: 8px;">Criar Card</h3>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Adicione novos flashcards aos seus baralhos
+            </p>
+        </div>
+    </a>
+    <a href="{{ url_for('gerar_ia') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">🤖</div>
+            <h3 style="margin-bottom: 8px;">Gerar com IA</h3>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Use inteligência artificial para criar cards
+            </p>
+        </div>
+    </a>
+    <a href="{{ url_for('desafio') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">🎯</div>
+            <h3 style="margin-bottom: 8px;">Modo Desafio</h3>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Teste seus conhecimentos com quiz
+            </p>
+        </div>
+    </a>
+    <a href="{{ url_for('amigos') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">👥</div>
+            <h3 style="margin-bottom: 8px;">Sistema Social</h3>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Conecte-se e compartilhe baralhos
+            </p>
+        </div>
+    </a>
+</div>
+
+
+<script>
+// Animação de entrada
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.card, .baralho-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+
+<!-- Seções de Baralhos logo após os botões -->
+<div style="margin-top: 32px;">
+    <span id="meus-baralhos"></span>
+    <!-- Seção: Meus Baralhos -->
+    <div style="margin-bottom: 48px;">
+        <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 1.5rem;">
+            📚 Meus Baralhos
+            <span style="background: var(--primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.9rem;">{{ baralhos|length }}</span>
+        </h2>
+        {% if baralhos %}
+        <div class="grid-baralhos">
+            {% for baralho_id, baralho in baralhos.items() %}
+            <div class="baralho-card hover-lift" style="--baralho-cor: {{ baralho.cor }};">
+                <div class="baralho-title">{{ baralho.nome }}</div>
+                <div class="baralho-stats">
+                    <span>📚 {{ baralho.cards|length }} cards</span>
+                </div>
+                <div class="baralho-actions">
+                    <a href="{{ url_for('estudar', baralho_id=baralho_id) }}" class="btn tiny">📖 Estudar</a>
+                    <a href="{{ url_for('compartilhar_baralho', baralho_id=baralho_id) }}" class="btn tiny ghost">🤝 Compartilhar</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align:center; color:var(--muted);">Você não possui baralhos.</div>
+        {% endif %}
+    </div>
+
+    <span id="baralhos-compartilhados"></span>
+    <span id="baralhos-compartilhados"></span>
+    <!-- Seção: Baralhos Compartilhados -->
+    <div>
+        <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 1.5rem;">
+            🤝 Baralhos Compartilhados
+            <span style="background: var(--purple); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.9rem;">{{ baralhos_compartilhados|length }}</span>
+        </h2>
+        {% if baralhos_compartilhados %}
+        <div class="grid-baralhos">
+            {% for deck_id, deck_data in baralhos_compartilhados.items() %}
+            <div class="baralho-card hover-lift" style="--baralho-cor: {{ deck_data.cor }};">
+                <div class="baralho-title">{{ deck_data.nome }}</div>
+                <div class="baralho-stats">
+                    <span>📚 {{ deck_data.cards|length }} cards</span>
+                    <span>•</span>
+                    <span>👑 {{ usuarios[deck_data.owner].nome if deck_data.owner in usuarios else 'Desconhecido' }}</span>
+                </div>
+                <div class="baralho-actions">
+                    <a href="{{ url_for('estudar', baralho_id=deck_id) }}" class="btn tiny">📖 Estudar</a>
+                    {% set is_owner = deck_data.owner == usuario.id %}
+                    {% set perms = deck_data.permissoes[usuario.id] if deck_data.permissoes and usuario.id in deck_data.permissoes else {} %}
+                    {% if is_owner or perms.ler %}
+                    <a href="{{ url_for('gerenciar_baralho', baralho_id=deck_id) }}" class="btn tiny ghost" style="background: var(--purple); color: white;">🤝 Colaborativo</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align:center; color:var(--muted);">Nenhum baralho compartilhado.</div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

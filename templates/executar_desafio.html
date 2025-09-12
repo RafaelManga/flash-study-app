@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Executando Desafio - FlashStudy{% endblock %}
+
+{% block content %}
+<div id="desafio-container" style="max-width: 800px; margin: 0 auto;">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2>🎯 Desafio em Andamento</h2>
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <div id="timer" style="font-weight: 700; font-size: 1.2rem; color: var(--warning);">
+                    {{ desafio.tempo_por_questao }}s
+                </div>
+                <form method="post" action="{{ url_for('cancelar_desafio') }}" style="display: inline;">
+                    <button class="btn danger tiny" type="submit" onclick="return confirm('Tem certeza que deseja cancelar o desafio?')">
+                        Cancelar
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="progresso" style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span>Questão <span id="questao-atual">1</span> de {{ desafio.cards|length }}</span>
+                <span id="pontuacao">Pontos: 0</span>
+            </div>
+            <div style="background: var(--border); height: 8px; border-radius: 4px; overflow: hidden;">
+                <div id="barra-progresso" style="background: var(--primary); height: 100%; width: 0%; transition: width 0.3s;"></div>
+            </div>
+        </div>
+
+        <div id="questao-container">
+            <div id="pergunta" style="font-size: 1.3rem; font-weight: 600; margin-bottom: 24px; text-align: center; min-height: 60px; display: flex; align-items: center; justify-content: center;">
+                <!-- Pergunta será inserida aqui via JavaScript -->
+            </div>
+
+            <div class="form-group">
+                <input type="text" id="resposta-input" placeholder="Digite sua resposta..."
+                       style="font-size: 1.1rem; text-align: center;" autocomplete="off">
+            </div>
+
+            <div class="form-actions" style="justify-content: center;">
+                <button id="confirmar-btn" class="btn" onclick="confirmarResposta()">
+                    Confirmar Resposta
+                </button>
+            </div>
+        </div>
+
+        <div id="resultado-questao" style="display: none; text-align: center; margin-top: 24px;">
+            <div id="feedback" style="font-size: 1.2rem; font-weight: 600; margin-bottom: 16px;"></div>
+            <div id="resposta-correta" style="color: var(--muted); margin-bottom: 20px;"></div>
+            <button id="proxima-btn" class="btn" onclick="proximaQuestao()">
+                Próxima Questão
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+const desafioData = {{ desafio | tojson }};
+let questaoAtual = 0;
+let pontos = 0;
+let timer;
+let tempoRestante;
+
+function iniciarDesafio() {
+    mostrarQuestao();
+}
+
+function mostrarQuestao() {
+    if (questaoAtual >= desafioData.cards.length) {
+        finalizarDesafio();
+        return;
+    }
+
+    const card = desafioData.cards[questaoAtual];
+    document.getElementById('pergunta').textContent = card.frente;
+    document.getElementById('questao-atual').textContent = questaoAtual + 1;
+    document.getElementById('resposta-input').value = '';
+    document.getElementById('resposta-input').focus();
+
+    // Atualiza barra de progresso
+    const progresso = ((questaoAtual + 1) / desafioData.cards.length) * 100;
+    document.getElementById('barra-progresso').style.width = progresso + '%';
+
+    // Esconde resultado anterior
+    document.getElementById('resultado-questao').style.display = 'none';
+    document.getElementById('questao-container').style.display = 'block';
+
+    // Inicia timer
+    iniciarTimer();
+}
+
+function iniciarTimer() {
+    tempoRestante = desafioData.tempo_por_questao;
+    const timerElement = document.getElementById('timer');
+
+    timer = setInterval(() => {
+        timerElement.textContent = tempoRestante + 's';
+
+        if (tempoRestante <= 10) {
+            timerElement.style.color = 'var(--danger)';
+        } else {
+            timerElement.style.color = 'var(--warning)';
+        }
+
+        tempoRestante--;
+
+        if (tempoRestante < 0) {
+            clearInterval(timer);
+            confirmarResposta(true); // timeout
+        }
+    }, 1000);
+}
+
+function confirmarResposta(timeout = false) {
+    clearInterval(timer);
+
+    const card = desafioData.cards[questaoAtual];
+    const resposta = timeout ? '' : document.getElementById('resposta-input').value;
+
+    fetch('/responder_desafio', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            card_id: card.id,
+            resposta: resposta
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        mostrarResultado(data, timeout);
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao processar resposta. Tente novamente.');
+    });
+}
+
+function mostrarResultado(data, timeout) {
+    document.getElementById('questao-container').style.display = 'none';
+    document.getElementById('resultado-questao').style.display = 'block';
+
+    const feedbackElement = document.getElementById('feedback');
+    const respostaCorretaElement = document.getElementById('resposta-correta');
+
+    if (timeout) {
+        feedbackElement.textContent = '⏰ Tempo Esgotado!';
+        feedbackElement.style.color = 'var(--warning)';
+    } else if (data.acertou) {
+        feedbackElement.textContent = '✅ Correto!';
+        feedbackElement.style.color = 'var(--success)';
+        pontos += 10;
+    } else {
+        feedbackElement.textContent = '❌ Incorreto';
+        feedbackElement.style.color = 'var(--danger)';
+    }
+
+    respostaCorretaElement.textContent = `Resposta correta: ${data.resposta_correta}`;
+    document.getElementById('pontuacao').textContent = `Pontos: ${pontos}`;
+
+    // Muda texto do botão na última questão
+    if (questaoAtual >= desafioData.cards.length - 1) {
+        document.getElementById('proxima-btn').textContent = 'Ver Resultado Final';
+    }
+}
+
+function proximaQuestao() {
+    questaoAtual++;
+    mostrarQuestao();
+}
+
+function finalizarDesafio() {
+    window.location.href = '/finalizar_desafio';
+}
+
+// Event listeners
+document.getElementById('resposta-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        confirmarResposta();
+    }
+});
+
+// Inicia o desafio quando a página carrega
+document.addEventListener('DOMContentLoaded', iniciarDesafio);
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+{
+  "email@teste.com": [
+    {
+      "nome": "Matemática",
+      "cards": [
+        {
+          "frente": "2+2",
+          "verso": "4"
+        },
+        {
+          "frente": "Capital do Brasil",
+          "verso": "Brasília"
+        }
+      ]
+    }
+  ],
+  "Rafael": {
+    "Biologia": [
+      {
+        "id": "7e465551-8b1f-4625-bfee-8d71fe3293b4",
+        "frente": "1 +1?",
+        "verso": "11"
+      }
+    ],
+    "sw": [
+      {
+        "id": "542e9b2e-1556-4dc9-9323-0f8c737fd1c7",
+        "frente": "sw",
+        "verso": "sw"
+      }
+    ]
+  },
+  "USROF2PCSB": {
+    "biologia_81e2": {
+      "nome": "Biologia",
+      "cor": "#22c55e",
+      "cards": [
+        {
+          "id": "4da9fee2-10a5-4a7b-910f-26552bff683c",
+          "frente": "1",
+          "verso": "12"
+        }
+      ]
+    }
+  },
+  "USRT5AAQIB": {
+    "ew_bec5": {
+      "nome": "ew",
+      "cor": "#f59e0b",
+      "cards": [
+        {
+          "id": "431aed01-a01f-4bed-ac36-9a167d6abc0b",
+          "frente": "we",
+          "verso": "ew"
+        }
+      ]
+    }
+  },
+  "USR0OHAART": {
+    "pokémon_e4b1": {
+      "nome": "Pokémon",
+      "cor": "#ef4444",
+      "cards": [
+        {
+          "id": "7c795a9d-5a94-4309-bc1c-064cb54370f7",
+          "frente": "Qual Pokémon crocodilo de fogo ?",
+          "verso": "Skeledirge"
+        }
+      ]
+    }
+  },
+  "USR7NYF0DY": {}
+}

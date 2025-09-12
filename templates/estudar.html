@@ -1,20 +1,93 @@
 {% extends "base.html" %}
+{% block title %}Estudar {{ baralho.nome }} - FlashStudy{% endblock %}
+
 {% block content %}
-<h2>Estudo de Flashcards</h2>
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 32px;">
+        <h2 style="font-size: 2.2rem; margin-bottom: 12px;">
+            📚 Estudando: {{ baralho.nome }}
+        </h2>
+        <p style="color: var(--muted); font-size: 1.1rem; line-height: 1.6;">
+            Total de cards: {{ baralho.cards|length }}
+            {% if baralho_compartilhado %}
+                <br>Este é um baralho compartilhado.
+            {% endif %}
+        </p>
+    </div>
 
-{% if cards %}
-    {% for card in cards %}
-        <div class="flashcard">
-            <p><b>Pergunta:</b> {{ card.frente }}</p>
-            <details>
-                <summary>Mostrar Resposta</summary>
-                <p>{{ card.verso }}</p>
-            </details>
+    {% if baralho.cards %}
+    <div class="grid-cards">
+        {% for card in baralho.cards %}
+        <div class="flip-card" id="card-{{ card.id }}" onclick="flipCard('card-{{ card.id }}')">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <div class="q">{{ card.frente }}</div>
+                </div>
+                <div class="flip-card-back">
+                    <div class="back-content">{{ card.verso }}</div>
+                    <div class="card-footer">
+                        {% if not baralho_compartilhado or (baralho.permissoes and usuario.id in baralho.permissoes and baralho.permissoes[usuario.id].deletar) or (baralho.owner == usuario.id) %}
+                        <a href="{{ url_for('editar_card', baralho_id=baralho_id, card_id=card.id) }}" class="btn tiny ghost">Editar</a>
+                        <form action="{{ url_for('excluir_card', baralho_id=baralho_id, card_id=card.id) }}" method="post" onsubmit="return confirm('Tem certeza que deseja excluir este card?');" style="display: inline;">
+                            <button type="submit" class="btn tiny danger">Excluir</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
-    {% endfor %}
-{% else %}
-    <p>Você não tem flashcards para estudar.</p>
-{% endif %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 48px; background: var(--panel); border-radius: 16px; margin-bottom: 32px;">
+        <div style="font-size: 4rem; margin-bottom: 16px;">😔</div>
+        <h3 style="margin-bottom: 12px;">Este baralho ainda não tem cards.</h3>
+        <p style="color: var(--muted); margin-bottom: 24px; line-height: 1.6;">
+            Adicione novos cards para começar a estudar ou use nossa IA para gerar alguns.
+        </p>
+        {% if not baralho_compartilhado or (baralho.permissoes and usuario.id in baralho.permissoes and baralho.permissoes[usuario.id].criar) or (baralho.owner == usuario.id) %}
+        <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('criar_card') }}" class="btn" style="font-size: 1.1rem;">
+                ➕ Criar Novo Card
+            </a>
+            <a href="{{ url_for('gerar_ia') }}" class="btn purple" style="font-size: 1.1rem;">
+                🤖 Gerar com IA
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
 
-<p class="links"><a href="{{ url_for('home') }}">← Voltar</a></p>
+    <div class="form-actions" style="justify-content: center; border-top: 1px solid var(--border); padding-top: 24px; gap: 16px; flex-wrap: wrap;">
+        <a href="{{ url_for('home') }}" class="btn ghost">🏠 Voltar para Início</a>
+        {% if not baralho_compartilhado or (baralho.owner == usuario.id) %}
+            <a href="{{ url_for('editar_baralho', baralho_id=baralho_id) }}" class="btn ghost">⚙️ Editar Baralho</a>
+            <a href="{{ url_for('criar_card') }}" class="btn">➕ Criar Novo Card</a>
+        {% elif baralho.permissoes and usuario.id in baralho.permissoes and baralho.permissoes[usuario.id].criar %}
+            <a href="{{ url_for('criar_card') }}" class="btn">➕ Criar Novo Card</a>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+
+function flipCard(cardId) {
+    const card = document.getElementById(cardId);
+    card.classList.toggle('flipped');
+}
+
+// Animação de entrada
+document.addEventListener("DOMContentLoaded", function() {
+    const cards = document.querySelectorAll('.flip-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = "0";
+        card.style.transform = "translateY(30px)";
+        setTimeout(() => {
+            card.style.transition = "all 0.6s ease";
+            card.style.opacity = "1";
+            card.style.transform = "translateY(0)";
+        }, index * 100);
+    });
+});
+</script>
 {% endblock %}

@@ -1,16 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Criar Flashcard</h2>
+<h2>{% if editar %}Editar card{% else %}Criar card{% endif %}</h2>
 
-<form method="POST" class="formulario">
-    <label>Pergunta (frente):</label>
-    <input type="text" name="frente" required>
+<form method="post" class="card form">
+  {% if not editar %}
+    <label>Escolher baralho existente</label>
+    <select name="baralho_existente">
+      <option value="">(nenhum)</option>
+      {% for nome in baralhos.keys() %}
+        <option value="{{ nome }}">{{ nome }}</option>
+      {% endfor %}
+    </select>
 
-    <label>Resposta (verso):</label>
-    <input type="text" name="verso" required>
+    <label>Ou criar novo baralho</label>
+    <input type="text" name="novo_baralho" placeholder="Nome do novo baralho">
+  {% else %}
+    <p>Baralho: <strong>{{ baralho_atual }}</strong></p>
+  {% endif %}
 
-    <button type="submit">Salvar</button>
+  <label>Pergunta (frente)</label>
+  <input type="text" name="frente" value="{{ card.frente if card }}" required>
+
+  <label>Resposta (verso)</label>
+  <textarea name="verso" rows="4" required>{{ card.verso if card }}</textarea>
+
+  <div class="form-actions">
+    <button class="btn" type="submit">{% if editar %}Salvar{% else %}Adicionar{% endif %}</button>
+    <a class="btn-link" href="{{ url_for('home') }}">Cancelar</a>
+  </div>
 </form>
-
-<p class="links"><a href="{{ url_for('home') }}">← Voltar</a></p>
 {% endblock %}

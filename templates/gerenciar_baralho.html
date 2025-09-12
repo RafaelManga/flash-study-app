@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Gerenciar {{ baralho.nome }} - FlashStudy{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <h2>� Colaboração: {{ baralho.nome }}</h2>
+    <p style="color: var(--muted); margin-bottom: 24px;">
+        {% if baralho_compartilhado %}
+            <b>Gerencie os membros e permissões deste baralho compartilhado.</b><br>
+            Marque as permissões desejadas para cada membro e clique em <b>Salvar</b>.<br>
+            <span style="font-size:0.95em; color:var(--primary);">Apenas o dono pode alterar permissões e remover membros.</span>
+        {% else %}
+            Gerencie seu baralho pessoal.
+        {% endif %}
+    </p>
+
+    {% if baralho_compartilhado %}
+        <h3>👥 Membros do Baralho</h3>
+        {% set membros = baralho.members if baralho.members else [] %}
+        {% set lider = usuarios[baralho.owner] %}
+        <div style="display: grid; gap: 16px; margin-bottom: 24px;">
+            <!-- Lider (dono) sempre no topo -->
+            <div style="background: var(--panel); padding: 18px; border-radius: 10px; border: 2px solid var(--primary); box-shadow: 0 2px 8px #0001;">
+                <div style="display: flex; align-items: center; gap: 16px; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        {% if lider.avatar %}
+                            <img src="{{ url_for('static', filename=lider.avatar) }}" alt="Avatar" class="friend-avatar">
+                        {% else %}
+                            <div class="friend-avatar" style="background: var(--primary);">
+                                {{ lider.nome[0].upper() }}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <div style="font-weight: 700;">{{ lider.nome }} <span style="color:var(--primary); font-size:0.95em;">(Líder)</span></div>
+                            <div style="color: var(--muted); font-size: 0.95em; margin-top: 2px;">
+                                <span style="font-size:1.1em; color:var(--success); vertical-align:middle;">&#10003;</span> Permissões: todas
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Membros -->
+            {% for membro_id in membros %}
+                {% if membro_id != baralho.owner %}
+                {% set membro = usuarios[membro_id] %}
+                <div style="background: var(--panel); padding: 18px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 8px #0001;">
+                    <div style="display: flex; align-items: center; gap: 16px; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            {% if membro.avatar %}
+                                <img src="{{ url_for('static', filename=membro.avatar) }}" alt="Avatar" class="friend-avatar">
+                            {% else %}
+                                <div class="friend-avatar" style="background: var(--primary);">
+                                    {{ membro.nome[0].upper() }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <div style="font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                                    {{ membro.nome }}
+                                    {% set perms = baralho.permissoes[membro.id] if baralho.permissoes and membro.id in baralho.permissoes else {} %}
+                                    {% set rank = 'colider' if perms.criar and perms.deletar else 'visitante' %}
+                                    {% if rank == 'colider' %}
+                                        <span class="badge badge-rank" data-rank="colider" style="background-color: #2563eb; color: #fff; font-size: 0.85em; padding: 2px 10px; border-radius: 8px;">Colíder</span>
+                                    {% else %}
+                                        <span class="badge badge-rank" data-rank="visitante" style="background-color: #64748b; color: #fff; font-size: 0.85em; padding: 2px 10px; border-radius: 8px;">Visitante</span>
+                                    {% endif %}
+                                </div>
+                                <div style="color: var(--muted); font-size: 0.85rem;">
+                                    {% if usuario_online(membro.id) %}
+                                        <span style="color: var(--success);">🟢 Online</span>
+                                    {% else %}
+                                        <span style="color: var(--muted);">⚫ Offline</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% if is_owner %}
+                        <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
+                            <form class="form-permissoes-membro" data-baralho-id="{{ baralho_id }}" data-member-id="{{ membro.id }}" style="display: flex; gap: 10px; align-items: center;">
+                                <label style="font-size: 0.95em;">
+                                    <select name="rank" class="select-rank-permissao">
+                                        <option value="colider" {% if rank == 'colider' %}selected{% endif %}>Colíder (editar cards)</option>
+                                        <option value="visitante" {% if rank == 'visitante' %}selected{% endif %}>Visitante (apenas leitura)</option>
+                                    </select>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<style>
+    .select-rank-permissao {
+        background: #181c24;
+        color: #fff;
+        border: 2px solid #2563eb;
+        border-radius: 8px;
+        padding: 6px 18px;
+        font-size: 1em;
+        font-weight: 500;
+        outline: none;
+        transition: border 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 8px #0002;
+        margin-right: 4px;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        cursor: pointer;
+    }
+    .select-rank-permissao:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 2px #2563eb44;
+    }
+    .select-rank-permissao option {
+        background: #23272f;
+        color: #fff;
+        font-weight: 500;
+    }
+    .select-rank-permissao option:hover, .select-rank-permissao option:focus {
+        background: #2563eb;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+                                </label>
+                                <button class="btn tiny" type="submit" style="border-radius: 8px; background: #2563eb; color: #fff; font-weight: 500; padding: 4px 16px; margin-left: 4px; transition: background 0.2s;">Salvar</button>
+                                <span class="permissao-feedback" style="margin-left:8px;font-size:0.95em;"></span>
+                            </form>
+                            <form method="post" action="{{ url_for('remover_membro', baralho_id=baralho_id, member_id=membro.id) }}">
+                                <button class="btn danger tiny" type="submit" onclick="return confirm('Tem certeza que deseja remover {{ membro.nome }} deste baralho?')">
+                                    🗑️ Remover
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="form-actions" style="justify-content: center; gap: 12px;">
+        {% if is_owner %}
+            <a href="{{ url_for('editar_baralho', baralho_id=baralho_id) }}" class="btn">✏️ Editar Nome/Cor</a>
+            <a href="{{ url_for('compartilhar_baralho', baralho_id=baralho_id.replace('shared_', '')) }}" class="btn purple">📤 Convidar Amigos</a>
+        {% endif %}
+        <a href="{{ url_for('estudar', baralho_id=baralho_id) }}" class="btn ghost">← Voltar ao Baralho</a>
+    </div>
+</div>
+{% endblock %}

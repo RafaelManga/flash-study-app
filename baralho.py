@@ -1,13 +1,11 @@
-from flashcard import Flashcard
+# Funções relacionadas ao estudo de baralhos
 
-class Baralho:
-    def __init__(self):
-        self.cards = []
+import random
 
-    def adicionar(self, frente, verso):
-        novo = Flashcard(frente, verso)
-        self.cards.append(novo)
-        return novo
+def embaralhar_cartas(cartas):
+    cartas_copy = list(cartas)
+    random.shuffle(cartas_copy)
+    return cartas_copy
 
-    def listar(self):
-        return self.cards
+def selecionar_cartas(cartas, quantidade):
+    return cartas[:quantidade]

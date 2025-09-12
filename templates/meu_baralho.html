@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Meus Baralhos{% endblock %}
+{% block content %}
+<h1>Meus Baralhos</h1>
+<ul>
+  {% for nome, cartas in baralhos.items() %}
+    <li>
+      {{ nome }} ({{ cartas|length }} cartas)
+      <form action="{{ url_for('excluir_baralho', baralho=nome) }}" method="post" style="display:inline;">
+        <button type="submit">Excluir</button>
+      </form>
+      <a href="{{ url_for('estudar', baralho=nome) }}">Estudar</a>
+      <a href="{{ url_for('criar_card', baralho=nome) }}">Adicionar Card</a>
+    </li>
+  {% endfor %}
+</ul>
+<a href="{{ url_for('criar') }}">Criar novo baralho</a>
+{% endblock %}

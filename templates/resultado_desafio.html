@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Resultado do Desafio - FlashStudy{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div class="card" style="text-align: center; margin-bottom: 24px;">
+        <h2>🏆 Desafio Concluído!</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin: 32px 0;">
+            <div style="background: var(--panel); padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
+                <div style="font-size: 2rem; font-weight: 800; color: var(--success);">{{ resultado.acertos }}</div>
+                <div style="color: var(--muted);">Acertos</div>
+            </div>
+            <div style="background: var(--panel); padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
+                <div style="font-size: 2rem; font-weight: 800; color: var(--danger);">{{ resultado.erros }}</div>
+                <div style="color: var(--muted);">Erros</div>
+            </div>
+            <div style="background: var(--panel); padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
+                <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">{{ resultado.porcentagem }}%</div>
+                <div style="color: var(--muted);">Aproveitamento</div>
+            </div>
+            <div style="background: var(--panel); padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
+                <div style="font-size: 2rem; font-weight: 800; color: var(--warning);">+{{ resultado.pontos_ganhos }}</div>
+                <div style="color: var(--muted);">Pontos</div>
+            </div>
+        </div>
+
+        <div class="form-actions" style="justify-content: center;">
+            <a href="{{ url_for('desafio') }}" class="btn">🔄 Novo Desafio</a>
+            <a href="{{ url_for('home') }}" class="btn ghost">🏠 Voltar ao Início</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>📝 Revisão das Respostas</h3>
+        <div style="display: grid; gap: 16px; margin-top: 20px;">
+            {% for resposta in resultado.respostas %}
+            {% set cor = 'var(--success)' if resposta.acertou else 'var(--danger)' %}
+            <div style="background: var(--panel); padding: 16px; border-radius: 8px; border-left: 4px solid '{{ cor }}';">
+                <div style="font-weight: 600; margin-bottom: 8px;">
+                    {% if resposta.acertou %}✅{% else %}❌{% endif %} {{ resposta.pergunta }}
+                </div>
+                <div style="color: var(--muted); margin-bottom: 4px;">
+                    <strong>Sua resposta:</strong> {{ resposta.resposta_usuario or "(não respondeu)" }}
+                </div>
+                <div style="color: var(--muted);">
+                    <strong>Resposta correta:</strong> {{ resposta.resposta_correta }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

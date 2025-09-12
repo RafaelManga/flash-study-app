@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Meu Perfil - FlashStudy{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div>
+        {% if usuario.avatar %}
+            <img src="{{ url_for('static', filename=usuario.avatar) }}" alt="Avatar" class="profile-avatar" id="avatar-preview">
+        {% else %}
+            <div class="profile-avatar" style="background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 3rem;">
+                {{ usuario.nome[0].upper() }}
+            </div>
+        {% endif %}
+    </div>
+    <div class="profile-info">
+        <h2>{{ usuario.nome }}</h2>
+        <div class="user-id">
+            <strong>Seu ID:</strong> {{ usuario.id }}
+            <button onclick="copiarTexto('{{ usuario.id }}', event)" class="btn tiny" style="margin-left: 8px;">📋 Copiar</button>
+<script>
+function copiarTexto(texto, event) {
+    event.preventDefault();
+    const btn = event.target;
+    const textoOriginal = btn.textContent;
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(texto).then(() => {
+            btn.textContent = 'Copiado!';
+            btn.style.background = 'linear-gradient(135deg, var(--success), #16a34a)';
+            setTimeout(() => {
+                btn.textContent = textoOriginal;
+                btn.style.background = '';
+            }, 1500);
+        });
+    } else {
+        // Fallback
+        const tempInput = document.createElement('input');
+        tempInput.value = texto;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        try {
+            document.execCommand('copy');
+            btn.textContent = 'Copiado!';
+            btn.style.background = 'linear-gradient(135deg, var(--success), #16a34a)';
+            setTimeout(() => {
+                btn.textContent = textoOriginal;
+                btn.style.background = '';
+            }, 1500);
+        } catch (e) {
+            alert('Erro ao copiar. Copie manualmente.');
+        }
+        document.body.removeChild(tempInput);
+    }
+}
+</script>
+        </div>
+        <p style="color: var(--muted); font-size: 0.9rem; margin-top: 8px;">
+            Compartilhe este ID com amigos para que possam te adicionar!
+        </p>
+        {% if usuario.frase_pessoal %}
+        <div style="margin-top: 16px; padding: 12px; background: var(--bg); border-radius: 8px; border-left: 4px solid var(--primary);">
+            <em>"{{ usuario.frase_pessoal }}"</em>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="profile-grid">
+    <div class="card">
+        <h3>✏️ Editar Perfil</h3>
+        <form method="post" enctype="multipart/form-data" class="form">
+            <div class="form-group">
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" name="nome" value="{{ usuario.nome }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento</label>
+                <input type="date" id="data_nascimento" name="data_nascimento" value="{{ usuario.data_nascimento or '' }}">
+                <small style="color: var(--muted); font-size: 0.85rem;">
+                    Opcional - será visível apenas para seus amigos
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="frase_pessoal">Frase Pessoal</label>
+                <input type="text" id="frase_pessoal" name="frase_pessoal"
+                       value="{{ usuario.frase_pessoal or '' }}"
+                       placeholder="Ex: Estudando para conquistar meus sonhos!">
+                <small style="color: var(--muted); font-size: 0.85rem;">
+                    Uma frase que representa você (máximo 100 caracteres)
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="avatar">Foto do Perfil</label>
+                <input type="file" id="avatar" name="avatar" accept="image/*" onchange="previewImagem(this)">
+                <small style="color: var(--muted); font-size: 0.85rem;">
+                    Formatos aceitos: PNG, JPG, JPEG, GIF, WEBP
+                </small>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn" type="submit">💾 Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>📊 Suas Estatísticas</h3>
+        <div style="display: grid; gap: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Pontos:</span>
+                <strong style="color: var(--primary);">{{ usuario.points or 0 }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Baralhos criados:</span>
+                <strong>{{ baralhos|length }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Total de cards:</span>
+                <strong>{{ baralhos.values() | map(attribute='cards') | map('length') | sum }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Amigos:</span>
+                <strong>{{ (usuario.friends or [])|length }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Membro desde:</span>
+                <strong>{{ data_formatada(usuario.data_criacao) if usuario.data_criacao else 'Data não disponível' }}</strong>
+            </div>
+        </div>
+
+        <hr>
+
+        <h4>🏆 Conquistas</h4>
+        <div style="display: grid; gap: 8px;">
+            {% if (usuario.points or 0) >= 100 %}
+                <div style="color: var(--success);">🥉 Primeiro Centenário (100+ pontos)</div>
+            {% endif %}
+            {% if (usuario.points or 0) >= 500 %}
+                <div style="color: var(--success);">🥈 Estudante Dedicado (500+ pontos)</div>
+            {% endif %}
+            {% if (usuario.points or 0) >= 1000 %}
+                <div style="color: var(--success);">🥇 Mestre dos Flashcards (1000+ pontos)</div>
+            {% endif %}
+            {% if baralhos|length >= 5 %}
+                <div style="color: var(--success);">📚 Colecionador (5+ baralhos)</div>
+            {% endif %}
+            {% if (usuario.friends or [])|length >= 3 %}
+                <div style="color: var(--success);">👥 Sociável (3+ amigos)</div>
+            {% endif %}
+
+            {% if (usuario.points or 0) < 100 and baralhos|length < 5 and (usuario.friends or [])|length < 3 %}
+                <div style="color: var(--muted); font-style: italic;">
+                    Continue estudando para desbloquear conquistas!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

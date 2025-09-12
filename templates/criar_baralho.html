@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Criar Baralho{% endblock %}
+{% block content %}
+<h1>Criar novo baralho</h1>
+<form method="post">
+  <label for="nome">Nome do baralho:</label>
+  <input type="text" id="nome" name="nome" required>
+  <button type="submit">Criar</button>
+</form>
+{% endblock %}

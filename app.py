@@ -1,105 +1,1226 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-from utils import carregar_dados, salvar_dados
 
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+FlashStudy - Plataforma de Flashcards com IA
+Versão: 2.0
+Autor: FlashStudy Team
+"""
+
+import os
+import json
+import time
+import random
+import string
+from datetime import datetime
+from uuid import uuid4
+from functools import wraps
+
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, g
+from flask_bcrypt import Bcrypt
+import google.generativeai as genai
+
+# --- Configuração da Aplicação ---
 app = Flask(__name__)
-app.secret_key = "segredo123"  # troque por algo mais seguro
+app.secret_key = os.environ.get("SECRET_KEY", "flashstudy_secret_key_2024")
+bcrypt = Bcrypt(app)
 
-# Carregando dados
-usuarios = carregar_dados("data/users.json", default={})
-flashcards = carregar_dados("data/flashcards.json", default=[])
+# --- Configuração da IA (Google Gemini) ---
+gemini_key = os.environ.get("GEMINI_API_KEY", "SUA_CHAVE_GEMINI_AQUI")
 
 
-# ---------------------- ROTAS DE LOGIN ----------------------
+if gemini_key == "SUA_CHAVE_GEMINI_AQUI":
+    print("⚠️  GEMINI_API_KEY: usando chave padrão - configure a variável de ambiente para produção")
 
+def salvar_dados(caminho, dados):
+    with open(caminho, "w", encoding="utf-8") as f:
+        json.dump(dados, f, indent=2, ensure_ascii=False)
+
+try:
+    genai.configure(api_key=gemini_key)
+    print("✅ Gemini API configurada com sucesso")
+except Exception as e:
+    print(f"❌ Erro ao configurar Gemini API: {e}")
+    model = None
+
+DATA_DIR = "data"
+# --- Constantes e Caminhos ---
+UPLOAD_FOLDER = "static/uploads"
+ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
+
+USERS_PATH = os.path.join(DATA_DIR, "users.json")
+BARALHOS_PATH = os.path.join(DATA_DIR, "baralhos.json")
+SHARED_DECKS_PATH = os.path.join(DATA_DIR, "shared_decks.json")
+FRIEND_REQUESTS_PATH = os.path.join(DATA_DIR, "friend_requests.json")
+DECK_INVITES_PATH = os.path.join(DATA_DIR, "deck_invites.json")
+
+# --- Criação de Pastas ---
+os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+
+# --- Funções de Utilidade para Dados ---
+def carregar_dados(caminho, default=None):
+    if not os.path.exists(caminho):
+        return default or {}
+    try:
+        with open(caminho, "r", encoding="utf-8") as f:
+            content = f.read()
+            return json.loads(content) if content else (default or {})
+    except (json.JSONDecodeError, FileNotFoundError):
+        return default or {}
+
+
+def salvar_dados(caminho, dados):
+    with open(caminho, "w", encoding="utf-8") as f:
+        json.dump(dados, f, indent=2, ensure_ascii=False)
+
+
+# --- Carregamento Inicial de Dados ---
+usuarios = carregar_dados(USERS_PATH, {})
+baralhos = carregar_dados(BARALHOS_PATH, {})
+shared_decks = carregar_dados(SHARED_DECKS_PATH, {})
+friend_requests = carregar_dados(FRIEND_REQUESTS_PATH, {})
+deck_invites = carregar_dados(DECK_INVITES_PATH, {})
+
+
+# --- Funções Auxiliares ---
+def gerar_id_usuario(prefix="USR", length=7):
+    return f"{prefix}{''.join(random.choices(string.ascii_uppercase + string.digits, k=length))}"
+
+
+def agora_timestamp():
+    return int(time.time())
+
+
+def data_formatada(timestamp):
+    if not timestamp:
+        return "Data não disponível"
+    try:
+        return datetime.fromtimestamp(timestamp).strftime("%d/%m/%Y")
+    except:
+        return "Data inválida"
+
+
+def usuario_online(user_id):
+    user = usuarios.get(user_id)
+    if not user:
+        return False
+    last_seen = user.get("last_seen", 0)
+    return (agora_timestamp() - last_seen) < 300  # 5 minutos
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXT
+
+
+def pode_usar_ia(user_id):
+    user = usuarios.get(user_id)
+    if not user:
+        return False
+    ultimo_uso = user.get("ultimo_uso_ia", 0)
+    return (agora_timestamp() - ultimo_uso) >= 120  # 2 minutos
+
+
+def tempo_restante_ia(user_id):
+    user = usuarios.get(user_id)
+    if not user:
+        return 0
+    ultimo_uso = user.get("ultimo_uso_ia", 0)
+    tempo_passado = agora_timestamp() - ultimo_uso
+    return max(0, 120 - tempo_passado)  # 2 minutos
+
+
+def contar_notificacoes(user_id):
+    """Conta total de notificações pendentes"""
+    pedidos_amizade = len(friend_requests.get(user_id, []))
+    convites_baralho = len(deck_invites.get(user_id, []))
+    return pedidos_amizade + convites_baralho
+
+
+# --- Decorador de Login ---
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Você precisa fazer login para acessar esta página.", "warning")
+            return redirect(url_for("login"))
+
+        user_id = session["user_id"]
+        if user_id not in usuarios:
+            session.clear()
+            flash("Sessão inválida. Faça login novamente.", "danger")
+            return redirect(url_for("login"))
+
+        g.user = usuarios[user_id]
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+# --- Context Processor ---
+@app.context_processor
+def inject_user():
+    user_data = None
+    notificacoes = 0
+    if "user_id" in session and session["user_id"] in usuarios:
+        user_data = usuarios[session["user_id"]]
+        notificacoes = contar_notificacoes(session["user_id"])
+
+    return {
+        "usuario": user_data,
+        "notificacoes_count": notificacoes,
+        "data_formatada": data_formatada,
+        "usuario_online": usuario_online
+    }
+
+
+# --- Rota Raiz ---
 @app.route("/")
-def home():
-    if "usuario" not in session:
-        return redirect(url_for("login"))
-    return render_template("index.html", cards=flashcards, usuario=session["usuario"])
+def index():
+    if "user_id" in session:
+        return redirect(url_for("home"))
+    return redirect(url_for("login"))
 
 
+# --- Autenticação ---
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form["email"]
+        email = request.form["email"].strip().lower()
         senha = request.form["senha"]
 
-        if email in usuarios and usuarios[email]["senha"] == senha:
-            session["usuario"] = {
-                "nome": usuarios[email]["nome"],
-                "email": email
-            }
+        if not email or not senha:
+            flash("Email e senha são obrigatórios.", "warning")
+            return render_template("login.html")
+
+        user_id, user_data = next(((uid, u) for uid, u in usuarios.items()
+                                   if u.get("email", "").lower() == email), (None, None))
+
+        if user_data and bcrypt.check_password_hash(user_data["senha"], senha):
+            session["user_id"] = user_id
+            user_data["last_seen"] = agora_timestamp()
+            salvar_dados(USERS_PATH, usuarios)
+            flash(f"Bem-vindo de volta, {user_data['nome']}!", "success")
             return redirect(url_for("home"))
         else:
-            return render_template("login.html", erro="Email ou senha inválidos.")
+            flash("Email ou senha incorretos. Verifique suas credenciais.", "danger")
 
-    mensagem = request.args.get("mensagem")
-    return render_template("login.html", mensagem=mensagem)
+    return render_template("login.html")
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        nome = request.form["nome"]
-        email = request.form["email"]
+        nome = request.form["nome"].strip()
+        email = request.form["email"].strip().lower()
         senha = request.form["senha"]
+        data_nascimento = request.form.get("data_nascimento", "").strip()
 
-        if email in usuarios:
-            return render_template("register.html", erro="Esse email já está cadastrado.")
+        if not nome or not email or not senha:
+            flash("Nome, email e senha são obrigatórios.", "warning")
+            return render_template("register.html")
 
-        usuarios[email] = {"nome": nome, "senha": senha}
-        salvar_dados("data/users.json", usuarios)
-        return redirect(url_for("login", mensagem="Cadastro concluído com sucesso!"))
+        if len(senha) < 6:
+            flash("A senha deve ter pelo menos 6 caracteres.", "warning")
+            return render_template("register.html")
+
+        # Verifica se email já existe
+        if any(u.get("email", "").lower() == email for u in usuarios.values()):
+            flash("Este email já está cadastrado. Tente fazer login ou use outro email.", "danger")
+            return render_template("register.html")
+
+        # Cria novo usuário
+        user_id = gerar_id_usuario()
+        hashed_senha = bcrypt.generate_password_hash(senha).decode("utf-8")
+        agora = agora_timestamp()
+
+        usuarios[user_id] = {
+            "id": user_id, "nome": nome, "email": email, "senha": hashed_senha,
+            "avatar": "", "points": 0, "last_seen": agora,
+            "friends": [], "ultimo_uso_ia": 0, "data_criacao": agora,
+            "data_nascimento": data_nascimento, "frase_pessoal": "",
+            "tema": "dark"
+        }
+        baralhos[user_id] = {}
+        friend_requests[user_id] = []
+        deck_invites[user_id] = []
+
+        salvar_dados(USERS_PATH, usuarios)
+        salvar_dados(BARALHOS_PATH, baralhos)
+        salvar_dados(FRIEND_REQUESTS_PATH, friend_requests)
+        salvar_dados(DECK_INVITES_PATH, deck_invites)
+
+        flash("Conta criada com sucesso! Agora você pode fazer login.", "success")
+        return redirect(url_for("login"))
 
     return render_template("register.html")
 
 
-@app.route("/reset", methods=["GET", "POST"])
+@app.route("/reset_password", methods=["GET", "POST"])
 def reset_password():
     if request.method == "POST":
-        nome = request.form["nome"]
-        email = request.form["email"]
-        senha = request.form["senha"]
+        email = request.form["email"].strip().lower()
+        nome = request.form["nome"].strip()
+        nova_senha = request.form["senha"]
 
-        if email in usuarios and usuarios[email]["nome"] == nome:
-            usuarios[email]["senha"] = senha
-            salvar_dados("data/users.json", usuarios)
-            return redirect(url_for("login", mensagem="Senha alterada com sucesso!"))
+        if not email or not nome or not nova_senha:
+            flash("Todos os campos são obrigatórios.", "warning")
+            return render_template("reset_password.html")
+
+        user_id, user_data = next(((uid, u) for uid, u in usuarios.items()
+                                   if u.get("email", "").lower() == email and u.get("nome") == nome), (None, None))
+
+        if user_data:
+            if len(nova_senha) < 6:
+                flash("A nova senha deve ter pelo menos 6 caracteres.", "warning")
+                return render_template("reset_password.html")
+
+            hashed_senha = bcrypt.generate_password_hash(nova_senha).decode("utf-8")
+            usuarios[user_id]["senha"] = hashed_senha
+            salvar_dados(USERS_PATH, usuarios)
+            flash("Senha redefinida com sucesso! Agora você pode fazer login.", "success")
+            return redirect(url_for("login"))
         else:
-            return render_template("reset_password.html", erro="Email ou nome inválido.")
+            flash("Usuário não encontrado com os dados fornecidos. Verifique o email e nome.", "danger")
 
     return render_template("reset_password.html")
 
 
 @app.route("/logout")
 def logout():
-    session.pop("usuario", None)
+    session.clear()
+    flash("Você saiu da sua conta com sucesso.", "success")
     return redirect(url_for("login"))
 
 
-# ---------------------- ROTAS DE FLASHCARDS ----------------------
+# --- Rotas Principais ---
+@app.route("/home")
+@login_required
+def home():
+    user_baralhos = baralhos.get(g.user["id"], {})
 
-@app.route("/criar", methods=["GET", "POST"])
-def criar():
-    if "usuario" not in session:
-        return redirect(url_for("login"))
+    # Baralhos compartilhados onde o usuário tem acesso
+    baralhos_compartilhados = {}
+    for deck_id, deck_data in shared_decks.items():
+        if g.user["id"] in deck_data.get("members", []) or deck_data.get("owner") == g.user["id"]:
+            baralhos_compartilhados[deck_id] = deck_data
 
-    if request.method == "POST":
-        frente = request.form["frente"]
-        verso = request.form["verso"]
-        flashcards.append({"frente": frente, "verso": verso})
-        salvar_dados("data/flashcards.json", flashcards)
+    return render_template("index.html",
+                           baralhos=user_baralhos,
+                           baralhos_compartilhados=baralhos_compartilhados)
+
+
+@app.route("/alternar_tema", methods=["POST"])
+@login_required
+def alternar_tema():
+    tema_atual = g.user.get("tema", "dark")
+    novo_tema = "light" if tema_atual == "dark" else "dark"
+    g.user["tema"] = novo_tema
+    salvar_dados(USERS_PATH, usuarios)
+    return jsonify({"tema": novo_tema})
+
+
+# --- Sistema de Amizade ---
+@app.route("/amigos")
+@login_required
+def amigos():
+    # Buscar informações dos amigos
+    amigos_info = []
+    for friend_id in g.user.get("friends", []):
+        friend = usuarios.get(friend_id)
+        if friend:
+            amigos_info.append({
+                "id": friend_id,
+                "nome": friend["nome"],
+                "avatar": friend.get("avatar", ""),
+                "online": usuario_online(friend_id),
+                "points": friend.get("points", 0)
+            })
+
+    # Pedidos de amizade recebidos
+    pedidos_recebidos = []
+    for request_data in friend_requests.get(g.user["id"], []):
+        sender = usuarios.get(request_data["from"])
+        if sender:
+            pedidos_recebidos.append({
+                "id": request_data["from"],
+                "nome": sender["nome"],
+                "avatar": sender.get("avatar", ""),
+                "timestamp": request_data["timestamp"]
+            })
+
+    # Convites para baralhos recebidos
+    convites_recebidos = []
+    for invite_data in deck_invites.get(g.user["id"], []):
+        sender = usuarios.get(invite_data["from"])
+        deck_data = shared_decks.get(invite_data["deck_id"])
+        if sender and deck_data:
+            convites_recebidos.append({
+                "id": invite_data["deck_id"],
+                "from_id": invite_data["from"],
+                "from_nome": sender["nome"],
+                "deck_nome": deck_data["nome"],
+                "timestamp": invite_data["timestamp"]
+            })
+
+    return render_template("amigos.html",
+                           amigos=amigos_info,
+                           pedidos_recebidos=pedidos_recebidos,
+                           convites_recebidos=convites_recebidos)
+
+
+@app.route("/enviar_pedido_amizade", methods=["POST"])
+@login_required
+def enviar_pedido_amizade():
+    friend_id = request.form.get("friend_id", "").strip().upper()
+
+    if not friend_id:
+        flash("ID do amigo não pode ser vazio.", "warning")
+        return redirect(url_for("amigos"))
+
+    if friend_id == g.user["id"]:
+        flash("Você não pode adicionar a si mesmo como amigo.", "warning")
+        return redirect(url_for("amigos"))
+
+    if friend_id not in usuarios:
+        flash("Usuário não encontrado. Verifique se o ID está correto.", "danger")
+        return redirect(url_for("amigos"))
+
+    if friend_id in g.user.get("friends", []):
+        flash("Este usuário já é seu amigo.", "info")
+        return redirect(url_for("amigos"))
+
+    # Verifica se já existe um pedido pendente
+    pedidos_existentes = friend_requests.get(friend_id, [])
+    if any(p["from"] == g.user["id"] for p in pedidos_existentes):
+        flash("Você já enviou um pedido de amizade para este usuário.", "info")
+        return redirect(url_for("amigos"))
+
+    # Adiciona o pedido de amizade
+    if friend_id not in friend_requests:
+        friend_requests[friend_id] = []
+
+    friend_requests[friend_id].append({
+        "from": g.user["id"],
+        "timestamp": agora_timestamp()
+    })
+
+    salvar_dados(FRIEND_REQUESTS_PATH, friend_requests)
+
+    friend_name = usuarios[friend_id]["nome"]
+    flash(f"Pedido de amizade enviado para {friend_name}!", "success")
+    return redirect(url_for("amigos"))
+
+
+@app.route("/aceitar_amizade/<friend_id>", methods=["POST"])
+@login_required
+def aceitar_amizade(friend_id):
+    # Remove o pedido da lista
+    pedidos = friend_requests.get(g.user["id"], [])
+    friend_requests[g.user["id"]] = [p for p in pedidos if p["from"] != friend_id]
+
+    # Adiciona aos amigos mutuamente
+    if friend_id not in g.user.get("friends", []):
+        g.user.setdefault("friends", []).append(friend_id)
+
+    if g.user["id"] not in usuarios[friend_id].get("friends", []):
+        usuarios[friend_id].setdefault("friends", []).append(g.user["id"])
+
+    salvar_dados(USERS_PATH, usuarios)
+    salvar_dados(FRIEND_REQUESTS_PATH, friend_requests)
+
+    friend_name = usuarios[friend_id]["nome"]
+    flash(f"Agora você e {friend_name} são amigos!", "success")
+    return redirect(url_for("amigos"))
+
+
+@app.route("/recusar_amizade/<friend_id>", methods=["POST"])
+@login_required
+def recusar_amizade(friend_id):
+    # Remove o pedido da lista
+    pedidos = friend_requests.get(g.user["id"], [])
+    friend_requests[g.user["id"]] = [p for p in pedidos if p["from"] != friend_id]
+
+    salvar_dados(FRIEND_REQUESTS_PATH, friend_requests)
+
+    flash("Pedido de amizade recusado.", "info")
+    return redirect(url_for("amigos"))
+
+
+@app.route("/remover_amigo/<friend_id>", methods=["POST"])
+@login_required
+def remover_amigo(friend_id):
+    # Remove mutuamente
+    if friend_id in g.user.get("friends", []):
+        g.user["friends"].remove(friend_id)
+
+    if g.user["id"] in usuarios[friend_id].get("friends", []):
+        usuarios[friend_id]["friends"].remove(g.user["id"])
+
+    salvar_dados(USERS_PATH, usuarios)
+    flash("Amigo removido da sua lista.", "success")
+    return redirect(url_for("amigos"))
+
+
+@app.route("/perfil_amigo/<friend_id>")
+@login_required
+def perfil_amigo(friend_id):
+    if friend_id not in g.user.get("friends", []):
+        flash("Você só pode ver o perfil de seus amigos.", "warning")
+        return redirect(url_for("amigos"))
+
+    friend = usuarios.get(friend_id)
+    if not friend:
+        flash("Usuário não encontrado.", "danger")
+        return redirect(url_for("amigos"))
+
+    return render_template("perfil_amigo.html", amigo=friend)
+
+
+# --- Sistema de Compartilhamento ---
+@app.route("/compartilhar_baralho/<baralho_id>")
+@login_required
+def compartilhar_baralho(baralho_id):
+    # Verifica se o baralho existe e pertence ao usuário
+    if baralho_id not in baralhos.get(g.user["id"], {}):
+        flash("Baralho não encontrado.", "danger")
         return redirect(url_for("home"))
 
-    return render_template("criar.html")
+    baralho = baralhos[g.user["id"]][baralho_id]
+    amigos_info = []
+
+    for friend_id in g.user.get("friends", []):
+        friend = usuarios.get(friend_id)
+        if friend:
+            amigos_info.append({
+                "id": friend_id,
+                "nome": friend["nome"],
+                "avatar": friend.get("avatar", ""),
+                "online": usuario_online(friend_id)
+            })
+
+    return render_template("compartilhar_baralho.html",
+                           baralho=baralho,
+                           baralho_id=baralho_id,
+                           amigos=amigos_info)
 
 
-@app.route("/estudar")
-def estudar():
-    if "usuario" not in session:
-        return redirect(url_for("login"))
-    return render_template("estudar.html", cards=flashcards)
+@app.route("/enviar_convite_baralho", methods=["POST"])
+@login_required
+def enviar_convite_baralho():
+    baralho_id = request.form.get("baralho_id")
+    friend_id = request.form.get("friend_id")
+
+    if not baralho_id or not friend_id:
+        flash("Dados inválidos.", "danger")
+        return redirect(url_for("home"))
+
+    if baralho_id not in baralhos.get(g.user["id"], {}):
+        flash("Baralho não encontrado.", "danger")
+        return redirect(url_for("home"))
+
+    if friend_id not in g.user.get("friends", []):
+        flash("Você só pode enviar convites para seus amigos.", "danger")
+        return redirect(url_for("compartilhar_baralho", baralho_id=baralho_id))
+
+    # Cria baralho compartilhado se não existir
+    shared_deck_id = f"shared_{baralho_id}"
+    if shared_deck_id not in shared_decks:
+        baralho_original = baralhos[g.user["id"]][baralho_id]
+        shared_decks[shared_deck_id] = {
+            "nome": baralho_original["nome"],
+            "cor": baralho_original["cor"],
+            "cards": baralho_original["cards"].copy(),
+            "owner": g.user["id"],
+            "members": [],
+            "created_at": agora_timestamp()
+        }
+        salvar_dados(SHARED_DECKS_PATH, shared_decks)
+
+    # Adiciona o convite
+    if friend_id not in deck_invites:
+        deck_invites[friend_id] = []
+
+    deck_invites[friend_id].append({
+        "deck_id": shared_deck_id,
+        "from": g.user["id"],
+        "timestamp": agora_timestamp()
+    })
+
+    salvar_dados(DECK_INVITES_PATH, deck_invites)
+
+    friend_name = usuarios[friend_id]["nome"]
+    baralho_nome = baralhos[g.user["id"]][baralho_id]["nome"]
+    flash(f"Convite para o baralho '{baralho_nome}' enviado para {friend_name}!", "success")
+    return redirect(url_for("compartilhar_baralho", baralho_id=baralho_id))
 
 
+@app.route("/aceitar_convite_baralho/<deck_id>", methods=["POST"])
+@login_required
+def aceitar_convite_baralho(deck_id):
+    # Remove o convite da lista
+    convites = deck_invites.get(g.user["id"], [])
+    convite = next((c for c in convites if c["deck_id"] == deck_id), None)
+
+    if not convite:
+        flash("Convite não encontrado.", "danger")
+        return redirect(url_for("amigos"))
+
+    deck_invites[g.user["id"]] = [c for c in convites if c["deck_id"] != deck_id]
+
+    # Adiciona como membro do baralho compartilhado
+    if deck_id in shared_decks:
+        if g.user["id"] not in shared_decks[deck_id].get("members", []):
+            shared_decks[deck_id].setdefault("members", []).append(g.user["id"])
+            salvar_dados(SHARED_DECKS_PATH, shared_decks)
+
+    salvar_dados(DECK_INVITES_PATH, deck_invites)
+
+    deck_name = shared_decks[deck_id]["nome"]
+    flash(f"Você agora tem acesso ao baralho compartilhado '{deck_name}'!", "success")
+    return redirect(url_for("amigos"))
+
+
+@app.route("/recusar_convite_baralho/<deck_id>", methods=["POST"])
+@login_required
+def recusar_convite_baralho(deck_id):
+    # Remove o convite da lista
+    convites = deck_invites.get(g.user["id"], [])
+    deck_invites[g.user["id"]] = [c for c in convites if c["deck_id"] != deck_id]
+
+    salvar_dados(DECK_INVITES_PATH, deck_invites)
+
+    flash("Convite para baralho recusado.", "info")
+    return redirect(url_for("amigos"))
+
+
+# --- Geração com IA ---
+@app.route("/gerar_ia", methods=["GET", "POST"])
+@login_required
+def gerar_ia():
+    if request.method == "POST":
+        # Verifica se a IA está disponível
+        if not model:
+            flash("Serviço de IA temporariamente indisponível. Tente novamente mais tarde.", "danger")
+            return redirect(url_for("gerar_ia"))
+
+        # Verifica cooldown
+        if not pode_usar_ia(g.user["id"]):
+            tempo_restante = tempo_restante_ia(g.user["id"])
+            minutos = tempo_restante // 60
+            segundos = tempo_restante % 60
+            flash(f"Aguarde {minutos}m {segundos}s antes de gerar novos cards com IA.", "warning")
+            return redirect(url_for("gerar_ia"))
+
+        tema = request.form.get("tema", "").strip()
+        quantidade = int(request.form.get("quantidade", 5))
+        nome_baralho = request.form.get("nome_baralho", "").strip()
+        cor_baralho = request.form.get("cor_baralho", "#3b82f6")
+
+        if not tema or not nome_baralho:
+            flash("Tema e nome do baralho são obrigatórios.", "warning")
+            return redirect(url_for("gerar_ia"))
+
+        if quantidade > 15:
+            flash("Máximo de 15 cards por geração.", "warning")
+            return redirect(url_for("gerar_ia"))
+
+        try:
+            print(f"🤖 Gerando {quantidade} cards sobre '{tema}'...")
+
+            prompt = f"""Crie exatamente {quantidade} flashcards educativos sobre o tema \"{tema}\".\n\nIMPORTANTE: Responda APENAS com um array JSON válido, sem texto adicional, sem markdown, sem explicações.\n\nFormato exato esperado:\n[\n  {{\"frente\": \"pergunta 1\", \"verso\": \"resposta 1\"}},\n  {{\"frente\": \"pergunta 2\", \"verso\": \"resposta 2\"}}\n]\n\nRegras:\n- Perguntas claras e diretas\n- Respostas concisas e precisas\n- Exatamente {quantidade} flashcards\n- Apenas JSON válido na resposta\n\nTema: {tema}"""
+
+            response = model.generate_content(prompt)
+            content = response.text.strip()
+
+            # Limpa a resposta removendo markdown se presente
+            if content.startswith("```json"):
+                content = content[7:]
+            if content.endswith("```"):
+                content = content[:-3]
+            if content.startswith("```"):
+                content = content[3:]
+
+            content = content.strip()
+
+            # Tenta fazer o parse do JSON
+            try:
+                generated_cards = json.loads(content)
+            except json.JSONDecodeError as e:
+                print(f"❌ Erro de JSON: {e}")
+                raise ValueError("Resposta da IA não está em formato JSON válido")
+
+            # Validação da estrutura
+            if not isinstance(generated_cards, list):
+                raise ValueError("Resposta deve ser uma lista de cards")
+
+            if len(generated_cards) == 0:
+                raise ValueError("Nenhum card foi gerado")
+
+            # Valida cada card
+            cards_validos = []
+            for i, card_data in enumerate(generated_cards):
+                if not isinstance(card_data, dict):
+                    continue
+
+                if "frente" not in card_data or "verso" not in card_data:
+                    continue
+
+                frente = str(card_data["frente"]).strip()
+                verso = str(card_data["verso"]).strip()
+
+                if not frente or not verso:
+                    continue
+
+                cards_validos.append({"frente": frente, "verso": verso})
+
+            if not cards_validos:
+                raise ValueError("Nenhum card válido foi gerado")
+
+            # Cria o baralho
+            baralho_id = ''.join(filter(str.isalnum, nome_baralho)).lower() + f"_{uuid4().hex[:4]}"
+            user_id = g.user["id"]
+
+            baralhos.setdefault(user_id, {})[baralho_id] = {
+                "nome": nome_baralho,
+                "cor": cor_baralho,
+                "cards": []
+            }
+
+            # Adiciona os cards válidos
+            for card_data in cards_validos:
+                new_card = {
+                    "id": str(uuid4()),
+                    "frente": card_data["frente"],
+                    "verso": card_data["verso"]
+                }
+                baralhos[user_id][baralho_id]["cards"].append(new_card)
+
+            # Atualiza o último uso da IA
+            usuarios[user_id]["ultimo_uso_ia"] = agora_timestamp()
+
+            salvar_dados(BARALHOS_PATH, baralhos)
+            salvar_dados(USERS_PATH, usuarios)
+
+            flash(f"🎉 {len(cards_validos)} cards gerados com IA e adicionados ao baralho '{nome_baralho}'!", "success")
+            return redirect(url_for("estudar", baralho_id=baralho_id))
+
+        except Exception as e:
+            print(f"❌ Erro na IA: {e}")
+            flash("Erro temporário na geração de IA. Tente novamente em alguns minutos.", "danger")
+
+        return redirect(url_for("gerar_ia"))
+
+    # Calcula tempo restante para próximo uso
+    tempo_restante = tempo_restante_ia(g.user["id"])
+    pode_usar = pode_usar_ia(g.user["id"])
+
+    return render_template("gerar_ia.html",
+                           pode_usar_ia=pode_usar,
+                           tempo_restante=tempo_restante)
+
+
+# --- Rotas de Baralhos e Cards ---
+
+# --- Gerenciar Baralho ---
+@app.route("/gerenciar_baralho/<baralho_id>")
+@login_required
+def gerenciar_baralho(baralho_id):
+    # Permite ao dono ou membro acessar gerenciamento
+    baralho = None
+    baralho_compartilhado = False
+    is_owner = False
+
+    if baralho_id in baralhos.get(g.user["id"], {}):
+        baralho = baralhos[g.user["id"]][baralho_id]
+        is_owner = True
+    elif baralho_id in shared_decks:
+        deck_data = shared_decks[baralho_id]
+        if g.user["id"] in deck_data.get("members", []) or deck_data.get("owner") == g.user["id"]:
+            baralho = deck_data
+            baralho_compartilhado = True
+            is_owner = deck_data.get("owner") == g.user["id"]
+
+    if not baralho:
+        flash("Baralho não encontrado ou você não tem permissão para acessá-lo.", "danger")
+        return redirect(url_for("home"))
+
+    context = dict(
+        baralho=baralho,
+        baralho_id=baralho_id,
+        baralho_compartilhado=baralho_compartilhado,
+        is_owner=is_owner
+    )
+    # Se for compartilhado, passar usuarios para o template
+    if baralho_compartilhado:
+        context["usuarios"] = usuarios
+    return render_template("gerenciar_baralho.html", **context)
+
+# --- Editar Baralho (nome/cor) ---
+@app.route("/editar_baralho/<baralho_id>", methods=["GET", "POST"])
+@login_required
+def editar_baralho(baralho_id):
+    # Só o dono pode editar
+    if baralho_id in baralhos.get(g.user["id"], {}):
+        baralho = baralhos[g.user["id"]][baralho_id]
+        is_shared = False
+    elif baralho_id in shared_decks and shared_decks[baralho_id].get("owner") == g.user["id"]:
+        baralho = shared_decks[baralho_id]
+        is_shared = True
+    else:
+        flash("Apenas o dono pode editar este baralho.", "danger")
+        return redirect(url_for("home"))
+
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "delete":
+            # Excluir baralho
+            if is_shared:
+                if baralho_id in shared_decks:
+                    del shared_decks[baralho_id]
+                    salvar_dados(SHARED_DECKS_PATH, shared_decks)
+                    flash("Baralho compartilhado excluído com sucesso!", "success")
+                    return redirect(url_for("home"))
+                else:
+                    flash("Baralho compartilhado não encontrado.", "danger")
+                    return redirect(url_for("home"))
+            else:
+                user_baralhos = baralhos.get(g.user["id"], {})
+                if baralho_id in user_baralhos:
+                    del user_baralhos[baralho_id]
+                    salvar_dados(BARALHOS_PATH, baralhos)
+                    flash("Baralho excluído com sucesso!", "success")
+                    return redirect(url_for("home"))
+                else:
+                    flash("Baralho não encontrado.", "danger")
+                    return redirect(url_for("home"))
+        else:
+            nome = request.form.get("nome", "").strip()
+            cor = request.form.get("cor", "#3b82f6")
+            if not nome:
+                flash("O nome do baralho não pode ser vazio.", "warning")
+                return render_template("editar_baralho.html", baralho=baralho, baralho_id=baralho_id)
+            baralho["nome"] = nome
+            baralho["cor"] = cor
+            if is_shared:
+                salvar_dados(SHARED_DECKS_PATH, shared_decks)
+            else:
+                salvar_dados(BARALHOS_PATH, baralhos)
+            flash("Baralho atualizado com sucesso!", "success")
+            return redirect(url_for("gerenciar_baralho", baralho_id=baralho_id))
+
+    return render_template("editar_baralho.html", baralho=baralho, baralho_id=baralho_id)
+@app.route("/estudar/<baralho_id>")
+@login_required
+def estudar(baralho_id):
+    # Verifica se é um baralho próprio ou compartilhado
+    baralho = None
+    baralho_compartilhado = False
+
+
+    # Primeiro verifica nos baralhos próprios
+    if baralho_id in baralhos.get(g.user["id"], {}):
+        baralho = baralhos[g.user["id"]][baralho_id]
+    # Depois verifica nos baralhos compartilhados
+    elif baralho_id in shared_decks:
+        deck_data = shared_decks[baralho_id]
+        is_owner = deck_data.get("owner") == g.user["id"]
+        member_perms = deck_data.get("permissoes", {}).get(g.user["id"], {})
+        if is_owner or (g.user["id"] in deck_data.get("members", []) and member_perms.get("ler")):
+            baralho = deck_data
+            baralho_compartilhado = True
+        else:
+            flash("Você não tem permissão para acessar este baralho.", "danger")
+            return redirect(url_for("home"))
+
+    if not baralho:
+        flash("Baralho não encontrado ou você não tem permissão para acessá-lo.", "danger")
+        return redirect(url_for("home"))
+
+    return render_template("estudar.html",
+                           baralho=baralho,
+                           baralho_id=baralho_id,
+                           baralho_compartilhado=baralho_compartilhado,
+                           usuario=g.user,
+                           cards=baralho.get("cards", []))
+
+
+@app.route("/criar_card", methods=["GET", "POST"])
+@login_required
+def criar_card():
+    if request.method == "POST":
+        frente = request.form.get("frente", "").strip()
+        verso = request.form.get("verso", "").strip()
+        baralho_existente = request.form.get("baralho_existente", "").strip()
+        novo_baralho = request.form.get("novo_baralho", "").strip()
+        cor_baralho = request.form.get("cor_baralho", "#3b82f6")
+
+        if not frente or not verso:
+            flash("Pergunta e resposta são obrigatórias.", "warning")
+            return redirect(url_for("criar_card"))
+
+        new_card = {"id": str(uuid4()), "frente": frente, "verso": verso}
+        user_id = g.user["id"]
+
+        # Determina qual baralho usar
+        if baralho_existente:
+            # Verifica se é baralho próprio ou compartilhado
+            if baralho_existente in baralhos.get(user_id, {}):
+                baralhos[user_id][baralho_existente]["cards"].append(new_card)
+                salvar_dados(BARALHOS_PATH, baralhos)
+                target_baralho = baralho_existente
+            elif baralho_existente in shared_decks:
+                # Verifica permissão no baralho compartilhado
+                deck_data = shared_decks[baralho_existente]
+                if user_id in deck_data.get("members", []) or deck_data.get("owner") == user_id:
+                    shared_decks[baralho_existente]["cards"].append(new_card)
+                    salvar_dados(SHARED_DECKS_PATH, shared_decks)
+                    target_baralho = baralho_existente
+                else:
+                    flash("Você não tem permissão para adicionar cards neste baralho.", "danger")
+                    return redirect(url_for("criar_card"))
+            else:
+                flash("Baralho não encontrado.", "danger")
+                return redirect(url_for("criar_card"))
+        elif novo_baralho:
+            # Cria novo baralho
+            baralho_id = ''.join(filter(str.isalnum, novo_baralho)).lower() + f"_{uuid4().hex[:4]}"
+            baralhos.setdefault(user_id, {})[baralho_id] = {
+                "nome": novo_baralho, "cor": cor_baralho, "cards": [new_card]
+            }
+            salvar_dados(BARALHOS_PATH, baralhos)
+            target_baralho = baralho_id
+        else:
+            flash("Selecione um baralho existente ou crie um novo.", "warning")
+            return redirect(url_for("criar_card"))
+
+        flash("Card criado com sucesso!", "success")
+        return redirect(url_for("estudar", baralho_id=target_baralho))
+
+    # GET request
+    user_baralhos = baralhos.get(g.user["id"], {})
+
+    # Adiciona baralhos compartilhados onde o usuário pode criar cards
+    baralhos_editaveis = dict(user_baralhos)
+    for deck_id, deck_data in shared_decks.items():
+        is_owner = deck_data.get("owner") == g.user["id"]
+        member_perms = deck_data.get("permissoes", {}).get(g.user["id"], {})
+        if is_owner or (g.user["id"] in deck_data.get("members", []) and member_perms.get("criar")):
+            baralhos_editaveis[deck_id] = deck_data
+
+    return render_template("criar_card.html", baralhos=baralhos_editaveis)
+
+
+@app.route("/editar_card/<baralho_id>/<card_id>", methods=["GET", "POST"])
+@login_required
+def editar_card(baralho_id, card_id):
+    # Encontra o baralho e card
+    baralho = None
+    is_shared = False
+
+
+    if baralho_id in baralhos.get(g.user["id"], {}):
+        baralho = baralhos[g.user["id"]][baralho_id]
+    elif baralho_id in shared_decks:
+        deck_data = shared_decks[baralho_id]
+        is_owner = deck_data.get("owner") == g.user["id"]
+        member_perms = deck_data.get("permissoes", {}).get(g.user["id"], {})
+        if is_owner or (g.user["id"] in deck_data.get("members", []) and member_perms.get("deletar")):
+            baralho = deck_data
+            is_shared = True
+
+
+    if not baralho:
+        flash("Baralho não encontrado ou você não tem permissão para editar/excluir cards.", "danger")
+        return redirect(url_for("home"))
+
+    card = next((c for c in baralho["cards"] if c["id"] == card_id), None)
+    if not card:
+        flash("Card não encontrado.", "danger")
+        return redirect(url_for("estudar", baralho_id=baralho_id))
+
+    if request.method == "POST":
+        frente = request.form.get("frente", "").strip()
+        verso = request.form.get("verso", "").strip()
+
+        if not frente or not verso:
+            flash("Pergunta e resposta são obrigatórias.", "warning")
+            return render_template("criar_card.html", card=card, baralho_id=baralho_id, editar=True)
+
+        card["frente"] = frente
+        card["verso"] = verso
+
+        if is_shared:
+            salvar_dados(SHARED_DECKS_PATH, shared_decks)
+        else:
+            salvar_dados(BARALHOS_PATH, baralhos)
+
+        flash("Card atualizado com sucesso!", "success")
+        return redirect(url_for("estudar", baralho_id=baralho_id))
+
+    return render_template("criar_card.html", card=card, baralho_id=baralho_id, editar=True)
+
+
+@app.route("/excluir_card/<baralho_id>/<card_id>", methods=["POST"])
+@login_required
+def excluir_card(baralho_id, card_id):
+    # Encontra o baralho
+    baralho = None
+    is_shared = False
+
+    if baralho_id in baralhos.get(g.user["id"], {}):
+        baralho = baralhos[g.user["id"]][baralho_id]
+    elif baralho_id in shared_decks:
+        deck_data = shared_decks[baralho_id]
+        if g.user["id"] in deck_data.get("members", []) or deck_data.get("owner") == g.user["id"]:
+            baralho = deck_data
+            is_shared = True
+
+    if not baralho:
+        flash("Baralho não encontrado.", "danger")
+        return redirect(url_for("home"))
+
+    # Remove o card
+    baralho["cards"] = [c for c in baralho["cards"] if c["id"] != card_id]
+
+    if is_shared:
+        salvar_dados(SHARED_DECKS_PATH, shared_decks)
+    else:
+        salvar_dados(BARALHOS_PATH, baralhos)
+
+    flash("Card excluído com sucesso!", "success")
+    return redirect(url_for("estudar", baralho_id=baralho_id))
+
+
+# --- Sistema de Desafio ---
+@app.route("/desafio")
+@login_required
+def desafio():
+    user_baralhos = baralhos.get(g.user["id"], {})
+    return render_template("desafio.html", baralhos=user_baralhos)
+
+
+@app.route("/iniciar_desafio", methods=["POST"])
+@login_required
+def iniciar_desafio():
+    baralhos_selecionados = request.form.getlist("baralhos")
+    tempo_por_questao = int(request.form.get("tempo", 30))
+    max_questoes = int(request.form.get("max_questoes", 10))
+
+    if not baralhos_selecionados:
+        flash("Selecione pelo menos um baralho para o desafio.", "warning")
+        return redirect(url_for("desafio"))
+
+    # Coleta todos os cards dos baralhos selecionados
+    todas_as_perguntas = []
+    user_baralhos = baralhos.get(g.user["id"], {})
+
+    for baralho_id in baralhos_selecionados:
+        if baralho_id in user_baralhos:
+            baralho = user_baralhos[baralho_id]
+            for card in baralho["cards"]:
+                todas_as_perguntas.append({
+                    "id": card["id"],
+                    "frente": card["frente"],
+                    "verso": card["verso"],
+                    "baralho": baralho["nome"]
+                })
+
+    if not todas_as_perguntas:
+        flash("Os baralhos selecionados não têm cards.", "warning")
+        return redirect(url_for("desafio"))
+
+    # Embaralha e limita questões
+    random.shuffle(todas_as_perguntas)
+    if max_questoes > 0:
+        questoes = todas_as_perguntas[:max_questoes]
+    else:
+        questoes = todas_as_perguntas
+
+    # Salva na sessão
+    session["desafio"] = {
+        "cards": questoes,
+        "tempo_por_questao": tempo_por_questao,
+        "questao_atual": 0,
+        "respostas": [],
+        "inicio": agora_timestamp()
+    }
+
+    return render_template("executar_desafio.html", desafio=session["desafio"])
+
+
+@app.route("/responder_desafio", methods=["POST"])
+@login_required
+def responder_desafio():
+    data = request.get_json()
+    desafio = session.get("desafio")
+
+    if not desafio:
+        return jsonify({"error": "Nenhum desafio ativo"}), 400
+
+    card_id = data.get("card_id")
+    resposta_usuario = data.get("resposta", "").strip()
+
+    # Encontra o card atual
+    card_atual = next((c for c in desafio["cards"] if c["id"] == card_id), None)
+    if not card_atual:
+        return jsonify({"error": "Card não encontrado"}), 400
+
+    # Verifica se acertou
+    resposta_correta = card_atual["verso"].lower().strip()
+    resposta_user = resposta_usuario.lower().strip()
+    acertou = resposta_user == resposta_correta or (resposta_user in resposta_correta and len(resposta_user) > 2)
+
+    return jsonify({
+        "acertou": acertou,
+        "resposta_correta": card_atual["verso"]
+    })
+
+
+@app.route("/finalizar_desafio", methods=["POST"])
+@login_required
+def finalizar_desafio():
+    acertos = int(request.form.get("acertos", 0))
+    erros = int(request.form.get("erros", 0))
+    pontos = int(request.form.get("pontos", 0))
+
+    # Atualiza pontos do usuário
+    g.user["points"] = g.user.get("points", 0) + pontos
+    salvar_dados(USERS_PATH, usuarios)
+
+    # Limpa desafio da sessão
+    session.pop("desafio", None)
+
+    total = acertos + erros
+    porcentagem = round((acertos / total) * 100) if total > 0 else 0
+
+    resultado = {
+        "acertos": acertos,
+        "erros": erros,
+        "porcentagem": porcentagem,
+        "pontos_ganhos": pontos,
+        "respostas": []  # Simplificado para esta versão
+    }
+
+    return render_template("resultado_desafio.html", resultado=resultado)
+
+
+@app.route("/cancelar_desafio", methods=["POST"])
+@login_required
+def cancelar_desafio():
+    session.pop("desafio", None)
+    flash("Desafio cancelado.", "info")
+    return redirect(url_for("desafio"))
+
+
+# --- Perfil ---
+@app.route("/perfil", methods=["GET", "POST"])
+@login_required
+def perfil():
+    if request.method == "POST":
+        nome = request.form.get("nome", "").strip()
+        data_nascimento = request.form.get("data_nascimento", "").strip()
+        frase_pessoal = request.form.get("frase_pessoal", "").strip()
+        avatar_file = request.files.get("avatar")
+
+        if nome:
+            g.user["nome"] = nome
+        if data_nascimento:
+            g.user["data_nascimento"] = data_nascimento
+        if frase_pessoal:
+            g.user["frase_pessoal"] = frase_pessoal[:100]
+
+        if avatar_file and avatar_file.filename:
+            if allowed_file(avatar_file.filename):
+                ext = avatar_file.filename.rsplit('.', 1)[1].lower()
+                filename = f"avatar_{g.user['id']}_{int(time.time())}.{ext}"
+                path = os.path.join(UPLOAD_FOLDER, filename)
+                avatar_file.save(path)
+                g.user["avatar"] = f"uploads/{filename}"
+            else:
+                flash("Formato de imagem não suportado.", "danger")
+                return redirect(url_for("perfil"))
+
+        salvar_dados(USERS_PATH, usuarios)
+        flash("Perfil atualizado com sucesso!", "success")
+        return redirect(url_for("perfil"))
+
+    user_baralhos = baralhos.get(g.user["id"], {})
+    def data_formatada(timestamp):
+        if not timestamp:
+            return "Data não disponível"
+        try:
+            return datetime.fromtimestamp(timestamp).strftime("%d/%m/%Y")
+        except:
+            return "Data inválida"
+    return render_template(
+        "perfil.html",
+        baralhos=user_baralhos,
+        usuario=g.user,
+        data_formatada=data_formatada
+    )
+
+
+# --- Rota de Heartbeat ---
+
+# --- Remover membro de baralho compartilhado ---
+@app.route("/remover_membro/<baralho_id>/<member_id>", methods=["POST"])
+@login_required
+def remover_membro(baralho_id, member_id):
+    if baralho_id not in shared_decks:
+        flash("Baralho compartilhado não encontrado.", "danger")
+        return redirect(url_for("home"))
+    deck = shared_decks[baralho_id]
+    if deck.get("owner") != g.user["id"]:
+        flash("Apenas o dono pode remover membros.", "danger")
+        return redirect(url_for("gerenciar_baralho", baralho_id=baralho_id))
+    if "members" in deck and member_id in deck["members"]:
+        deck["members"].remove(member_id)
+        if "permissoes" in deck and member_id in deck["permissoes"]:
+            del deck["permissoes"][member_id]
+        salvar_dados(SHARED_DECKS_PATH, shared_decks)
+        flash("Membro removido com sucesso!", "success")
+    else:
+        flash("Membro não encontrado neste baralho.", "warning")
+    return redirect(url_for("gerenciar_baralho", baralho_id=baralho_id))
+
+# --- API REST: Atualizar Permissões de Colaboradores ---
+from flask import abort
+
+@app.route("/api/baralho/<baralho_id>/permissoes/<member_id>", methods=["POST"])
+@login_required
+def api_atualizar_permissoes(baralho_id, member_id):
+    if baralho_id not in shared_decks:
+        return jsonify({"success": False, "error": "Baralho não encontrado."}), 404
+    deck = shared_decks[baralho_id]
+    if deck.get("owner") != g.user["id"]:
+        return jsonify({"success": False, "error": "Apenas o dono pode alterar permissões."}), 403
+    data = request.get_json(force=True)
+    if "permissoes" not in deck:
+        deck["permissoes"] = {}
+    rank = data.get("rank")
+    if rank == "colider":
+        deck["permissoes"][member_id] = {"ler": True, "criar": True, "deletar": True}
+    elif rank == "visitante":
+        deck["permissoes"][member_id] = {"ler": True, "criar": False, "deletar": False}
+    else:
+        return jsonify({"success": False, "error": "Rank inválido."}), 400
+    salvar_dados(SHARED_DECKS_PATH, shared_decks)
+    return jsonify({"success": True, "msg": "Permissões atualizadas com sucesso!"})
+@app.route("/heartbeat", methods=["POST"])
+@login_required
+def heartbeat():
+    g.user["last_seen"] = agora_timestamp()
+    salvar_dados(USERS_PATH, usuarios)
+    return jsonify({"status": "ok"})
+
+
+# --- Execução ---
 if __name__ == "__main__":
-    app.run(debug=True)
+    print("🚀 FlashStudy iniciando...")
+    print("📂 Dados serão salvos em:", DATA_DIR)
+    print("🌐 Acesse: http://localhost:5000")
+    app.run(debug=True, host="0.0.0.0", port=5000)

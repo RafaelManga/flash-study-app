@@ -1,21 +1,99 @@
 {% extends "base.html" %}
+{% block title %}Login - FlashStudy{% endblock %}
+
 {% block content %}
-<h2>Login</h2>
-{% if erro %}<p class="erro">{{ erro }}</p>{% endif %}
-{% if mensagem %}<p class="mensagem">{{ mensagem }}</p>{% endif %}
+<div class="card" style="max-width: 480px; margin: 60px auto;">
+    <div style="text-align: center; margin-bottom: 32px;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 12px;">🧠 FlashStudy</h1>
+        <p style="color: var(--muted); font-size: 1.1rem;">
+            Entre na sua conta para continuar estudando
+        </p>
+    </div>
 
-<form method="POST" class="formulario">
-    <label>Email:</label>
-    <input type="email" name="email" required>
+    <form method="post" class="form">
+        <div class="form-group">
+            <label for="email">📧 Email</label>
+            <input type="email" id="email" name="email" required
+                   placeholder="seu@email.com" autocomplete="email">
+        </div>
 
-    <label>Senha:</label>
-    <input type="password" name="senha" required>
+        <div class="form-group">
+            <label for="senha">🔒 Senha</label>
+            <input type="password" id="senha" name="senha" required
+                   placeholder="Sua senha" autocomplete="current-password">
+        </div>
 
-    <button type="submit">Entrar</button>
-</form>
+        <div class="form-actions">
+            <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem;">
+                🚀 Entrar
+            </button>
+        </div>
+    </form>
 
-<p class="links">
-    <a href="{{ url_for('register') }}">Cadastrar</a> |
-    <a href="{{ url_for('reset_password') }}">Esqueceu a senha?</a>
-</p>
+    <hr>
+
+    <div style="text-align: center;">
+        <p style="color: var(--muted); margin-bottom: 16px;">
+            Ainda não tem uma conta?
+        </p>
+        <a href="{{ url_for('register') }}" class="btn ghost" style="margin-right: 12px;">
+            ➕ Criar Conta
+        </a>
+        <a href="{{ url_for('reset_password') }}" class="btn ghost">
+            🔑 Esqueci a Senha
+        </a>
+    </div>
+</div>
+
+<!-- Card de Recursos -->
+<div class="card" style="max-width: 720px; margin: 24px auto;">
+    <h3 style="text-align: center; margin-bottom: 24px;">✨ Por que usar o FlashStudy?</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+        <div style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 12px;">🤖</div>
+            <h4 style="margin-bottom: 8px;">IA Integrada</h4>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Gere flashcards automaticamente sobre qualquer tema
+            </p>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 12px;">🤝</div>
+            <h4 style="margin-bottom: 8px;">Colaborativo</h4>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Compartilhe baralhos e estude com amigos
+            </p>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 12px;">🎯</div>
+            <h4 style="margin-bottom: 8px;">Desafios</h4>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Teste seus conhecimentos com quizzes cronometrados
+            </p>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 12px;">🎨</div>
+            <h4 style="margin-bottom: 8px;">Interface Moderna</h4>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Design responsivo com tema claro e escuro
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Animação de entrada
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 200);
+    });
+});
+</script>
 {% endblock %}

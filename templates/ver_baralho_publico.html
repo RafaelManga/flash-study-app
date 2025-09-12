@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ baralho.nome }} por {{ autor.nome }} - FlashStudy{% endblock %}
+
+{% block content %}
+<div style="text-align: center; margin-bottom: 32px;">
+    <h2>{{ baralho.nome }}</h2>
+    <p style="color: var(--muted);">
+        Criado por <strong>{{ autor.nome }}</strong> • {{ baralho.cards|length }} cards
+    </p>
+</div>
+
+{% if baralho.cards %}
+    <div class="grid-cards">
+        {% for card in baralho.cards %}
+        <div class="flip-card">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <div class="q">{{ card.frente }}</div>
+                    <div class="card-footer">
+                        <span style="color: var(--muted); font-size: 0.9rem;">Clique para ver a resposta</span>
+                    </div>
+                </div>
+                <div class="flip-card-back">
+                    <div class="back-content">
+                        <div style="font-weight: 600;">{{ card.verso }}</div>
+                    </div>
+                    <div class="card-footer">
+                        <span style="color: var(--muted); font-size: 0.9rem;">Baralho público</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card" style="text-align: center;">
+        <h3>Este baralho ainda não tem cards!</h3>
+        <p style="color: var(--muted);">O autor ainda não adicionou cards a este baralho.</p>
+    </div>
+{% endif %}
+
+<div class="card" style="text-align: center; margin-top: 32px;">
+    <h3>💡 Gostou deste baralho?</h3>
+    <p style="color: var(--muted); margin-bottom: 20px;">
+        Crie sua própria conta no FlashStudy para fazer seus próprios baralhos!
+    </p>
+    <div class="form-actions" style="justify-content: center;">
+        <a href="{{ url_for('register') }}" class="btn">🚀 Criar Conta Grátis</a>
+        <a href="{{ url_for('login') }}" class="btn ghost">Já tenho conta</a>
+    </div>
+</div>
+{% endblock %}

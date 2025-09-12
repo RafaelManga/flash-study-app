@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Baralhos Compartilhados - FlashStudy{% endblock %}
+{% block content %}
+<div class="card" style="max-width: 900px; margin: 0 auto;">
+    <h2 style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+        🤝 Baralhos Compartilhados
+        <span style="background: var(--purple); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem;">
+            {{ baralhos_compartilhados|length }}
+        </span>
+    </h2>
+    {% if baralhos_compartilhados %}
+    <div class="grid-baralhos">
+        {% for deck_id, deck_data in baralhos_compartilhados.items() %}
+    <div class="baralho-card hover-lift" style="--baralho-cor: {{ deck_data.cor }};" onclick="window.location.href='{{ url_for('estudar', baralho_id=deck_id) }}'">
+            <div class="baralho-title">{{ deck_data.nome }}</div>
+            <div class="baralho-stats">
+                <span>📚 {{ deck_data.cards|length }} cards</span>
+                <span>•</span>
+                <span>👑 {{ usuarios[deck_data.owner].nome if deck_data.owner in usuarios else 'Desconhecido' }}</span>
+            </div>
+            <div class="baralho-actions">
+                <a href="{{ url_for('estudar', baralho_id=deck_id) }}" class="btn tiny" onclick="event.stopPropagation()">
+                    📖 Estudar
+                </a>
+                {% set is_owner = deck_data.owner == usuario.id %}
+                {% set perms = deck_data.permissoes[usuario.id] if deck_data.permissoes and usuario.id in deck_data.permissoes else {} %}
+                {% if is_owner or perms.ler %}
+                <a href="{{ url_for('gerenciar_baralho', baralho_id=deck_id) }}" class="btn tiny ghost" style="background: var(--purple); color: white;" onclick="event.stopPropagation()">
+                    🤝 Colaborativo
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center; color:var(--muted);">Nenhum baralho compartilhado.</div>
+    {% endif %}
+</div>
+{% endblock %}

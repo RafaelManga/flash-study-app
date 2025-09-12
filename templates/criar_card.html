@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+{% block title %}{% if editar %}Editar Card{% else %}Criar Card{% endif %} - FlashStudy{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 720px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 32px;">
+        <h2 style="font-size: 2.2rem; margin-bottom: 12px;">
+            {% if editar %}✏️ Editar Card{% else %}➕ Criar Novo Card{% endif %}
+        </h2>
+        <p style="color: var(--muted); font-size: 1.1rem; line-height: 1.6;">
+            {% if editar %}
+                Atualize as informações do seu flashcard
+            {% else %}
+                Crie um novo flashcard para seus estudos
+            {% endif %}
+        </p>
+    </div>
+
+    <form method="post" class="form" id="card-form">
+        <div class="form-group">
+            <label for="frente">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                    ❓ Pergunta (Frente do Card)
+                    <span style="color: var(--danger); font-size: 0.8rem;">*</span>
+                </span>
+            </label>
+            <textarea id="frente" name="frente" required rows="3"
+                      placeholder="Digite a pergunta ou conceito que você quer estudar..."
+                      style="resize: vertical; min-height: 80px;">{% if card %}{{ card.frente }}{% endif %}</textarea>
+            <small style="color: var(--muted); font-size: 0.85rem; display: flex; align-items: center; gap: 6px; margin-top: 6px;">
+                💡 Seja claro e específico na pergunta
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="verso">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                    ✅ Resposta (Verso do Card)
+                    <span style="color: var(--danger); font-size: 0.8rem;">*</span>
+                </span>
+            </label>
+            <textarea id="verso" name="verso" required rows="4"
+                      placeholder="Digite a resposta completa e detalhada..."
+                      style="resize: vertical; min-height: 100px;">{% if card %}{{ card.verso }}{% endif %}</textarea>
+            <small style="color: var(--muted); font-size: 0.85rem; display: flex; align-items: center; gap: 6px; margin-top: 6px;">
+                📝 Inclua detalhes importantes na resposta
+            </small>
+        </div>
+
+        {% if not editar %}
+        <!-- Seleção de Baralho -->
+        <div class="form-group">
+            <label>
+                <span style="display: flex; align-items: center; gap: 8px;">
+                    📚 Destino do Card
+                </span>
+            </label>
+            <div style="display: grid; gap: 16px; background: var(--panel); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+                <!-- Baralho Existente -->
+                {% if baralhos %}
+                <div>
+                    <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 12px;">
+                        <input type="radio" name="destino" value="existente" checked style="margin: 0; transform: scale(1.2);">
+                        <strong>Adicionar a um baralho existente</strong>
+                    </label>
+                    <select id="baralho_existente" name="baralho_existente" style="width: 100%;">
+                        <option value="">Selecione um baralho...</option>
+                        {% for baralho_id, baralho in baralhos.items() %}
+                        <option value="{{ baralho_id }}">
+                            {{ baralho.nome }} ({{ baralho.cards|length }} cards){% if baralho.owner is defined and baralho.owner != usuario.id %} 👥 - Compartilhado{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <!-- Novo Baralho -->
+                <div>
+                    <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 12px;">
+                        <input type="radio" name="destino" value="novo" {% if not baralhos %}checked{% endif %} style="margin: 0; transform: scale(1.2);">
+                        <strong>Criar um novo baralho</strong>
+                    </label>
+                    <div style="display: grid; gap: 12px;">
+                        <input type="text" id="novo_baralho" name="novo_baralho"
+                               placeholder="Nome do novo baralho..."
+                               {% if not baralhos %}required{% endif %}>
+
+                        <!-- Seletor de Cor -->
+                        <div>
+                            <label style="font-size: 0.9rem; margin-bottom: 8px; display: block;">🎨 Cor do Baralho:</label>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                                <label class="color-option" style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s ease;">
+                                    <input type="radio" name="cor_baralho" value="#3b82f6" checked style="margin: 0;">
+                                    <span style="width: 16px; height: 16px; border-radius: 50%; background: #3b82f6;"></span>
+                                    <span style="font-size: 0.8rem;">Azul</span>
+                                </label>
+                                <label class="color-option" style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s ease;">
+                                    <input type="radio" name="cor_baralho" value="#ef4444" style="margin: 0;">
+                                    <span style="width: 16px; height: 16px; border-radius: 50%; background: #ef4444;"></span>
+                                    <span style="font-size: 0.8rem;">Vermelho</span>
+                                </label>
+                                <label class="color-option" style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s ease;">
+                                    <input type="radio" name="cor_baralho" value="#22c55e" style="margin: 0;">
+                                    <span style="width: 16px; height: 16px; border-radius: 50%; background: #22c55e;"></span>
+                                    <span style="font-size: 0.8rem;">Verde</span>
+                                </label>
+                                <label class="color-option" style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s ease;">
+                                    <input type="radio" name="cor_baralho" value="#8b5cf6" style="margin: 0;">
+                                    <span style="width: 16px; height: 16px; border-radius: 50%; background: #8b5cf6;"></span>
+                                    <span style="font-size: 0.8rem;">Roxo</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="form-actions" style="justify-content: center;">
+            <button class="btn" type="submit" style="font-size: 1.1rem; padding: 16px 32px;">
+                {% if editar %}💾 Salvar Alterações{% else %}➕ Criar Card{% endif %}
+            </button>
+            <a href="{% if editar %}{{ url_for('estudar', baralho_id=baralho_id) }}{% else %}{{ url_for('home') }}{% endif %}"
+               class="btn ghost">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<!-- Preview do Card -->
+<div class="card" style="max-width: 720px; margin: 24px auto;">
+    <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+        👁️ Preview do Card
+    </h3>
+    <div class="flip-card" id="preview-card" style="margin: 0 auto; max-width: 400px; cursor: pointer;">
+        <div class="flip-card-inner">
+            <div class="flip-card-front">
+                <div class="q" id="preview-frente">Digite uma pergunta para ver o preview...</div>
+            </div>
+            <div class="flip-card-back">
+                <div class="back-content" id="preview-verso">Digite uma resposta para ver o preview...</div>
+            </div>
+        </div>
+    </div>
+    <p style="text-align: center; color: var(--muted); font-size: 0.9rem; margin-top: 16px;">
+        🖱️ Clique no card para ver o efeito de virar
+    </p>
+</div>
+
+<!-- Dicas -->
+<div class="card" style="max-width: 720px; margin: 24px auto;">
+    <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+        💡 Dicas para Criar Cards Eficazes
+    </h3>
+    <div style="display: grid; gap: 16px;">
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--panel); border-radius: 12px;">
+            <span style="font-size: 1.5rem;">🎯</span>
+            <div>
+                <strong>Seja Específico</strong><br>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    Perguntas claras e diretas facilitam a memorização e revisão
+                </span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--panel); border-radius: 12px;">
+            <span style="font-size: 1.5rem;">📝</span>
+            <div>
+                <strong>Respostas Completas</strong><br>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    Inclua contexto e detalhes importantes na resposta
+                </span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--panel); border-radius: 12px;">
+            <span style="font-size: 1.5rem;">🔄</span>
+            <div>
+                <strong>Use Suas Próprias Palavras</strong><br>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    Reformular conceitos com suas palavras melhora a compreensão
+                </span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--panel); border-radius: 12px;">
+            <span style="font-size: 1.5rem;">🎨</span>
+            <div>
+                <strong>Organize por Temas</strong><br>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    Use cores diferentes para organizar baralhos por matéria ou tema
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.color-option:hover {
+    background: var(--border);
+}
+
+.color-option input:checked + span + span {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+#preview-card {
+    transition: transform 0.3s ease;
+}
+
+/* Removido hover para flip, agora é só clique */
+#preview-card:hover {
+    transform: scale(1.02);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const frenteInput = document.getElementById('frente');
+    const versoInput = document.getElementById('verso');
+    const previewFrente = document.getElementById('preview-frente');
+    const previewVerso = document.getElementById('preview-verso');
+    const destinoRadios = document.querySelectorAll('input[name="destino"]');
+    const baralhoExistente = document.getElementById('baralho_existente');
+    const novoBaralho = document.getElementById('novo_baralho');
+
+    // Preview em tempo real
+    function atualizarPreview() {
+        const frente = frenteInput.value.trim();
+        const verso = versoInput.value.trim();
+
+        previewFrente.textContent = frente || 'Digite uma pergunta para ver o preview...';
+        previewVerso.textContent = verso || 'Digite uma resposta para ver o preview...';
+    }
+
+    frenteInput.addEventListener('input', atualizarPreview);
+    versoInput.addEventListener('input', atualizarPreview);
+
+    // Controle de destino do card
+    function atualizarDestino() {
+        const destinoSelecionado = document.querySelector('input[name="destino"]:checked').value;
+
+        if (destinoSelecionado === 'existente') {
+            if (baralhoExistente) {
+                baralhoExistente.required = true;
+                baralhoExistente.disabled = false;
+            }
+            if (novoBaralho) {
+                novoBaralho.required = false;
+                novoBaralho.disabled = true;
+            }
+        } else {
+            if (baralhoExistente) {
+                baralhoExistente.required = false;
+                baralhoExistente.disabled = true;
+            }
+            if (novoBaralho) {
+                novoBaralho.required = true;
+                novoBaralho.disabled = false;
+            }
+        }
+    }
+
+    destinoRadios.forEach(radio => {
+        radio.addEventListener('change', atualizarDestino);
+    });
+
+    // Inicialização
+    atualizarPreview();
+    atualizarDestino();
+
+    // Validação do formulário
+    document.getElementById('card-form').addEventListener('submit', function(e) {
+        const frente = frenteInput.value.trim();
+        const verso = versoInput.value.trim();
+
+        if (!frente || !verso) {
+            e.preventDefault();
+            alert('Por favor, preencha tanto a pergunta quanto a resposta.');
+            return;
+        }
+
+        // Validação de destino só se não estiver editando
+        if (!editar) {
+            const destinoSelecionado = document.querySelector('input[name="destino"]:checked').value;
+
+            if (destinoSelecionado === 'existente' && baralhoExistente && !baralhoExistente.value) {
+                e.preventDefault();
+                alert('Por favor, selecione um baralho existente.');
+                baralhoExistente.focus();
+                return;
+            }
+
+            if (destinoSelecionado === 'novo' && novoBaralho && !novoBaralho.value.trim()) {
+                e.preventDefault();
+                alert('Por favor, digite o nome do novo baralho.');
+                novoBaralho.focus();
+                return;
+            }
+        }
+    });
+
+    // Animação de entrada
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 150);
+    });
+});
+// Flip do preview-card ao clicar
+document.addEventListener('DOMContentLoaded', function() {
+    var previewCard = document.getElementById('preview-card');
+    if (previewCard) {
+        previewCard.addEventListener('click', function() {
+            previewCard.classList.toggle('flipped');
+        });
+    }
+});
+</script>
+{% endblock %}

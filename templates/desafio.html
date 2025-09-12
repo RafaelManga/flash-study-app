@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Desafio - FlashStudy{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 640px; margin: 0 auto;">
+    <h2>🎯 Modo Desafio</h2>
+    <p style="color: var(--muted); margin-bottom: 24px;">
+        Teste seus conhecimentos com um quiz personalizado dos seus baralhos!
+    </p>
+
+    <form method="post" action="{{ url_for('iniciar_desafio') }}" class="form">
+        <div class="form-group">
+            <label>Selecione os Baralhos</label>
+            <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+                {% for baralho_id, baralho in baralhos.items() %}
+                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;">
+                    <input type="checkbox" name="baralhos" value="{{ baralho_id }}" style="margin: 0;">
+                    <span style="flex: 1;">{{ baralho.nome }} ({{ baralho.cards|length }} cards)</span>
+                    <span style="width: 12px; height: 12px; border-radius: 50%; background: '{{ baralho.cor|e }}'"></span>
+                </label>
+                {% else %}
+                <p style="color: var(--muted); text-align: center;">Você ainda não tem baralhos para o desafio.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="tempo">Tempo por Questão</label>
+            <select id="tempo" name="tempo" required>
+                <option value="15">15 segundos</option>
+                <option value="30" selected>30 segundos</option>
+                <option value="45">45 segundos</option>
+                <option value="60">1 minuto</option>
+                <option value="120">2 minutos</option>
+            </select>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn" type="submit">🚀 Iniciar Desafio</button>
+            <a href="{{ url_for('home') }}" class="btn ghost">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+{% if baralhos %}
+<div class="card" style="max-width: 640px; margin: 24px auto 0;">
+    <h3>📋 Como Funciona o Desafio:</h3>
+    <ul style="color: var(--muted); line-height: 1.6;">
+        <li><strong>Seleção:</strong> Escolha um ou mais baralhos para incluir no desafio</li>
+        <li><strong>Questões:</strong> Até 20 perguntas aleatórias dos baralhos selecionados</li>
+        <li><strong>Tempo:</strong> Cada questão tem um tempo limite configurável</li>
+        <li><strong>Pontuação:</strong> Ganhe 10 pontos por resposta correta</li>
+        <li><strong>Resultado:</strong> Veja suas respostas e aprenda com os erros</li>
+    </ul>
+</div>
+{% endif %}
+{% endblock %}

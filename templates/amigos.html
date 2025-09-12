@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Amigos - FlashStudy{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 32px;">
+        <h2 style="font-size: 2.2rem; margin-bottom: 12px;">👥 Meus Amigos</h2>
+        <p style="color: var(--muted); font-size: 1.1rem; line-height: 1.6;">
+            Conecte-se com outros estudantes e compartilhe conhecimento!
+        </p>
+    </div>
+
+    <!-- Adicionar Amigo -->
+    <div style="margin-bottom: 32px;">
+        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+            ➕ Adicionar Novo Amigo
+        </h3>
+        <form action="{{ url_for('enviar_pedido_amizade') }}" method="post" class="form" style="flex-direction: row; gap: 12px; align-items: flex-end;">
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                <label for="friend_id">ID do Amigo:</label>
+                <input type="text" id="friend_id" name="friend_id" placeholder="Ex: USR1A2B3C4" required style="text-transform: uppercase;">
+            </div>
+            <button type="submit" class="btn" style="padding: 12px 24px;">Enviar Pedido</button>
+        </form>
+    </div>
+
+    <!-- Pedidos de Amizade Recebidos -->
+    {% if pedidos_recebidos %}
+    <div style="margin-bottom: 32px;">
+        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+            ✉️ Pedidos de Amizade Recebidos
+            <span class="notification-badge" style="background: var(--warning);">{{ pedidos_recebidos|length }}</span>
+        </h3>
+        <div class="friends-grid">
+            {% for pedido in pedidos_recebidos %}
+            <div class="friend-request card" style="display: flex; align-items: center; gap: 16px;">
+                {% if pedido.avatar %}
+                    <img src="{{ url_for('static', filename=pedido.avatar) }}" alt="Avatar" class="friend-avatar">
+                {% else %}
+                    <div class="friend-avatar" style="background: linear-gradient(135deg, var(--warning), #f59e0b);">
+                        {{ pedido.nome[0].upper() }}
+                    </div>
+                {% endif %}
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 1.1rem;">{{ pedido.nome }}</div>
+                    <div style="color: var(--muted); font-size: 0.9rem;">Enviado em: {{ data_formatada(pedido.timestamp) }}</div>
+                </div>
+                <form action="{{ url_for('aceitar_amizade', friend_id=pedido.id) }}" method="post" style="display: inline;">
+                    <button type="submit" class="btn tiny" style="background: var(--success);">Aceitar</button>
+                </form>
+                <form action="{{ url_for('recusar_amizade', friend_id=pedido.id) }}" method="post" style="display: inline;">
+                    <button type="submit" class="btn tiny danger">Recusar</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Convites de Baralho Recebidos -->
+    {% if convites_recebidos %}
+    <div style="margin-bottom: 32px;">
+        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+            ✉️ Convites de Baralho Recebidos
+            <span class="notification-badge" style="background: var(--purple);">{{ convites_recebidos|length }}</span>
+        </h3>
+        <div class="friends-grid">
+            {% for convite in convites_recebidos %}
+            <div class="deck-invite card" style="display: flex; align-items: center; gap: 16px;">
+                <div class="friend-avatar" style="background: linear-gradient(135deg, var(--purple), #8b5cf6);">
+                    📚
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 1.1rem;">
+                        {{ convite.from_nome }} te convidou para o baralho "{{ convite.deck_nome }}"
+                    </div>
+                    <div style="color: var(--muted); font-size: 0.9rem;">Recebido em: {{ data_formatada(convite.timestamp) }}</div>
+                </div>
+                <form action="{{ url_for('aceitar_convite_baralho', deck_id=convite.id) }}" method="post" style="display: inline;">
+                    <button type="submit" class="btn tiny" style="background: var(--success);">Aceitar</button>
+                </form>
+                <form action="{{ url_for('recusar_convite_baralho', deck_id=convite.id) }}" method="post" style="display: inline;">
+                    <button type="submit" class="btn tiny danger">Recusar</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Seus Amigos -->
+    {% if amigos %}
+    <div style="margin-bottom: 32px;">
+        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+            🤝 Seus Amigos ({{ amigos|length }})
+        </h3>
+        <div class="friends-grid">
+            {% for amigo in amigos %}
+            <div class="friend-card card" style="display: flex; align-items: center; gap: 16px;">
+                {% if amigo.avatar %}
+                    <img src="{{ url_for('static', filename=amigo.avatar) }}" alt="Avatar" class="friend-avatar">
+                {% else %}
+                    <div class="friend-avatar" style="background: linear-gradient(135deg, var(--primary), var(--cyan));">
+                        {{ amigo.nome[0].upper() }}
+                    </div>
+                {% endif %}
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 1.1rem;">{{ amigo.nome }}</div>
+                    <div style="color: var(--muted); font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+                        {% if usuario_online(amigo.id) %}
+                            <span style="color: var(--success); display: flex; align-items: center; gap: 4px;">
+                                <span style="width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite;"></span>
+                                Online
+                            </span>
+                        {% else %}
+                            <span style="color: var(--muted); display: flex; align-items: center; gap: 4px;">
+                                <span style="width: 8px; height: 8px; background: var(--muted); border-radius: 50%;"></span>
+                                Offline
+                            </span>
+                        {% endif %}
+                        <span>• Pontos: {{ amigo.points }}</span>
+                    </div>
+                </div>
+                <a href="{{ url_for('perfil_amigo', friend_id=amigo.id) }}" class="btn tiny ghost">Ver Perfil</a>
+                <form action="{{ url_for('remover_amigo', friend_id=amigo.id) }}" method="post" onsubmit="return confirm('Tem certeza que deseja remover este amigo?');" style="display: inline;">
+                    <button type="submit" class="btn tiny danger">Remover</button>
+                </form>
+            </div>
+            {% endfor %}
+    {% else %}
+    <div style="text-align: center; padding: 48px; background: var(--panel); border-radius: 16px;">
+        <div style="font-size: 4rem; margin-bottom: 16px;">😔</div>
+        <h3 style="margin-bottom: 12px;">Você ainda não tem amigos.</h3>
+        <p style="color: var(--muted); margin-bottom: 24px; line-height: 1.6;">
+            Envie pedidos de amizade para começar a colaborar e estudar em grupo!
+        </p>
+    </div>
+{% endif %}
+
+    <script>
+    // Animação de entrada
+    document.addEventListener("DOMContentLoaded", function() {
+        const cards = document.querySelectorAll(".card");
+        cards.forEach((card, index) => {
+            card.style.opacity = "0";
+            card.style.transform = "translateY(30px)";
+            setTimeout(() => {
+                card.style.transition = "all 0.6s ease";
+                card.style.opacity = "1";
+                card.style.transform = "translateY(0)";
+            }, index * 100);
+        });
+    });
+    </script>
+
+{% endblock %}

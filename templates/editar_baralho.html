@@ -1,0 +1,47 @@
+    {# Botão de exclusão removido pois a rota excluir_baralho não existe. #}
+{% extends "base.html" %}
+{% block title %}Editar {{ baralho.nome }} - FlashStudy{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 640px; margin: 0 auto;">
+    <h2>⚙️ Editar Baralho</h2>
+
+    <form method="post" class="form">
+        <div class="form-group">
+            <label for="nome">Nome do Baralho</label>
+            <input type="text" id="nome" name="nome" value="{{ baralho.nome }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="cor">Cor do Baralho</label>
+            <select id="cor" name="cor" required>
+                <option value="#3b82f6" {% if baralho.cor == '#3b82f6' %}selected{% endif %}>🔵 Azul</option>
+                <option value="#ef4444" {% if baralho.cor == '#ef4444' %}selected{% endif %}>🔴 Vermelho</option>
+                <option value="#22c55e" {% if baralho.cor == '#22c55e' %}selected{% endif %}>🟢 Verde</option>
+                <option value="#8b5cf6" {% if baralho.cor == '#8b5cf6' %}selected{% endif %}>🟣 Roxo</option>
+                <option value="#f59e0b" {% if baralho.cor == '#f59e0b' %}selected{% endif %}>🟡 Amarelo</option>
+                <option value="#ec4899" {% if baralho.cor == '#ec4899' %}selected{% endif %}>🩷 Rosa</option>
+                <option value="#06b6d4" {% if baralho.cor == '#06b6d4' %}selected{% endif %}>🔷 Ciano</option>
+                <option value="#84cc16" {% if baralho.cor == '#84cc16' %}selected{% endif %}>🟢 Lima</option>
+            </select>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn" type="submit">💾 Salvar Alterações</button>
+            <a href="{{ url_for('estudar', baralho_id=baralho_id) }}" class="btn ghost">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="max-width: 640px; margin: 24px auto 0; border-color: var(--danger);">
+    <h3 style="color: var(--danger);">⚠️ Zona Perigosa</h3>
+    <p style="color: var(--muted); margin-bottom: 16px;">
+        Esta ação não pode ser desfeita. Todos os cards deste baralho serão perdidos permanentemente.
+    </p>
+
+    <form method="post" onsubmit="return confirm('Tem certeza que deseja excluir este baralho? Esta ação não pode ser desfeita!')">
+        <input type="hidden" name="action" value="delete">
+        <button class="btn danger" type="submit">🗑️ Excluir Baralho</button>
+    </form>
+</div>
+{% endblock %}
