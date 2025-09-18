@@ -56,11 +56,14 @@
 </div>
 
 <script>
-const desafioData = {{ desafio | tojson }};
+const desafioData = {{ desafio | tojson | safe }};
 let questaoAtual = 0;
 let pontos = 0;
+let acertos = 0;
+let erros = 0;
 let timer;
 let tempoRestante;
+let respostasUsuario = [];
 
 function iniciarDesafio() {
     mostrarQuestao();
@@ -144,25 +147,48 @@ function mostrarResultado(data, timeout) {
 
     const feedbackElement = document.getElementById('feedback');
     const respostaCorretaElement = document.getElementById('resposta-correta');
+    const card = desafioData.cards[questaoAtual];
+    let resposta_usuario = timeout ? '' : document.getElementById('resposta-input').value;
+
+    // Salva resposta do usuário para revisão
+    respostasUsuario.push({
+        nome: card.nome || card.titulo || '',
+        pergunta: card.frente,
+        resposta_usuario: resposta_usuario,
+        resposta_correta: card.verso,
+        acertou: data.acertou
+    });
 
     if (timeout) {
         feedbackElement.textContent = '⏰ Tempo Esgotado!';
         feedbackElement.style.color = 'var(--warning)';
+        erros++;
     } else if (data.acertou) {
         feedbackElement.textContent = '✅ Correto!';
         feedbackElement.style.color = 'var(--success)';
         pontos += 10;
+        acertos++;
     } else {
         feedbackElement.textContent = '❌ Incorreto';
         feedbackElement.style.color = 'var(--danger)';
+        erros++;
     }
 
     respostaCorretaElement.textContent = `Resposta correta: ${data.resposta_correta}`;
     document.getElementById('pontuacao').textContent = `Pontos: ${pontos}`;
 
-    // Muda texto do botão na última questão
+    // Muda texto e ação do botão na última questão
+    const proximaBtn = document.getElementById('proxima-btn');
+    proximaBtn.disabled = false;
     if (questaoAtual >= desafioData.cards.length - 1) {
-        document.getElementById('proxima-btn').textContent = 'Ver Resultado Final';
+        proximaBtn.textContent = 'Ver Resultado Final';
+        proximaBtn.onclick = function() {
+            proximaBtn.disabled = true;
+            finalizarDesafio();
+        };
+    } else {
+        proximaBtn.textContent = 'Próxima Questão';
+        proximaBtn.onclick = proximaQuestao;
     }
 }
 
@@ -172,7 +198,25 @@ function proximaQuestao() {
 }
 
 function finalizarDesafio() {
-    window.location.href = '/finalizar_desafio';
+    fetch('/finalizar_desafio', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            acertos: acertos,
+            erros: erros,
+            pontos: pontos,
+            respostas: respostasUsuario
+        })
+    })
+    .then(response => response.text())
+    .then(html => {
+        document.body.innerHTML = html;
+    })
+    .catch(error => {
+        alert('Erro ao finalizar desafio!');
+    });
 }
 
 // Event listeners

@@ -37,12 +37,16 @@ def salvar_dados(caminho, dados):
     with open(caminho, "w", encoding="utf-8") as f:
         json.dump(dados, f, indent=2, ensure_ascii=False)
 
+
+# Definição global da variável model
+model = None
 try:
     genai.configure(api_key=gemini_key)
     print("✅ Gemini API configurada com sucesso")
+    # Se a configuração for bem-sucedida, inicialize o modelo
+    model = genai.GenerativeModel("gemini-pro")
 except Exception as e:
     print(f"❌ Erro ao configurar Gemini API: {e}")
-    model = None
 
 DATA_DIR = "data"
 # --- Constantes e Caminhos ---
@@ -1080,19 +1084,25 @@ def responder_desafio():
     })
 
 
+
 @app.route("/finalizar_desafio", methods=["POST"])
 @login_required
 def finalizar_desafio():
-    acertos = int(request.form.get("acertos", 0))
-    erros = int(request.form.get("erros", 0))
-    pontos = int(request.form.get("pontos", 0))
+    if request.is_json:
+        data = request.get_json()
+        acertos = int(data.get("acertos", 0))
+        erros = int(data.get("erros", 0))
+        pontos = int(data.get("pontos", 0))
+        respostas = data.get("respostas", [])
+    else:
+        acertos = int(request.form.get("acertos", 0))
+        erros = int(request.form.get("erros", 0))
+        pontos = int(request.form.get("pontos", 0))
+        respostas = []
 
     # Atualiza pontos do usuário
     g.user["points"] = g.user.get("points", 0) + pontos
     salvar_dados(USERS_PATH, usuarios)
-
-    # Limpa desafio da sessão
-    session.pop("desafio", None)
 
     total = acertos + erros
     porcentagem = round((acertos / total) * 100) if total > 0 else 0
@@ -1102,9 +1112,20 @@ def finalizar_desafio():
         "erros": erros,
         "porcentagem": porcentagem,
         "pontos_ganhos": pontos,
-        "respostas": []  # Simplificado para esta versão
+        "respostas": respostas
     }
+    session.pop("desafio", None)
+    return render_template("resultado_desafio.html", resultado=resultado)
 
+
+@app.route("/resultado_desafio", methods=["GET"])
+@login_required
+def resultado_desafio():
+    resultado = session.get("resultado_desafio")
+    if not resultado:
+        flash("Nenhum resultado disponível.", "warning")
+        return redirect(url_for("desafio"))
+    session.pop("resultado_desafio", None)
     return render_template("resultado_desafio.html", resultado=resultado)
 
 
