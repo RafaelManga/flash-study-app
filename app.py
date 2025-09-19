@@ -1,3 +1,60 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+FlashStudy - Plataforma de Flashcards com IA
+Versão: 2.0
+Autor: FlashStudy Team
+"""
+
+import os
+import json
+import time
+import random
+import string
+from datetime import datetime
+from uuid import uuid4
+from functools import wraps
+
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, g
+from flask_bcrypt import Bcrypt
+import google.generativeai as genai
+
+# --- Configuração da Aplicação ---
+app = Flask(__name__)
+
+# Filtro Jinja2 para formatar datas
+from datetime import datetime
+def datetime_filter(value, format='%d/%m/%Y %H:%M'):
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value)
+        except Exception:
+            return value
+    return value.strftime(format)
+app.jinja_env.filters['datetime'] = datetime_filter
+app.secret_key = os.environ.get("SECRET_KEY", "flashstudy_secret_key_2024")
+bcrypt = Bcrypt(app)
+
+# Import e registro do blueprint do feed social
+from feed import feed_bp
+app.register_blueprint(feed_bp)
+def adicionar_conquista(user_id, conquista):
+    if user_id in usuarios:
+        user = usuarios[user_id]
+        if "conquistas" not in user:
+            user["conquistas"] = []
+        if conquista not in user["conquistas"]:
+            user["conquistas"].append(conquista)
+            salvar_dados(USERS_PATH, usuarios)
+
+def adicionar_badge(user_id, badge):
+    if user_id in usuarios:
+        user = usuarios[user_id]
+        if "badges" not in user:
+            user["badges"] = []
+        if badge not in user["badges"]:
+            user["badges"].append(badge)
+            salvar_dados(USERS_PATH, usuarios)
 # --- Rotas de competição (após definição do app e dados) ---
 # ...existing code...
 
@@ -23,6 +80,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_bcrypt import Bcrypt
 import google.generativeai as genai
 
+
 # --- Configuração da Aplicação ---
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "flashstudy_secret_key_2024")
@@ -31,14 +89,12 @@ bcrypt = Bcrypt(app)
 # --- Configuração da IA (Google Gemini) ---
 gemini_key = os.environ.get("GEMINI_API_KEY", "SUA_CHAVE_GEMINI_AQUI")
 
-
 if gemini_key == "SUA_CHAVE_GEMINI_AQUI":
     print("⚠️  GEMINI_API_KEY: usando chave padrão - configure a variável de ambiente para produção")
 
 def salvar_dados(caminho, dados):
     with open(caminho, "w", encoding="utf-8") as f:
         json.dump(dados, f, indent=2, ensure_ascii=False)
-
 
 # Definição global da variável model
 model = None
@@ -49,6 +105,10 @@ try:
     model = genai.GenerativeModel("gemini-pro")
 except Exception as e:
     print(f"❌ Erro ao configurar Gemini API: {e}")
+
+# Import e registro do blueprint do feed social
+from feed import feed_bp
+app.register_blueprint(feed_bp)
 
 DATA_DIR = "data"
 # --- Constantes e Caminhos ---
@@ -149,6 +209,12 @@ def aceitar_competicao():
             if comp.get("id") == comp_id:
                 comp["status"] = "aceita"
                 salvar_dados(USERS_PATH, usuarios)
+                adicionar_conquista(uid, "Desafio Aceito")
+                try:
+                    from feed import registrar_atividade
+                    registrar_atividade('desafio', uid, f'Aceitou um desafio!')
+                except Exception:
+                    pass
                 return jsonify({"msg": "Competição aceita!", "comp_id": comp_id})
     return jsonify({"msg": "Desafio não encontrado."}), 404
 
@@ -1348,6 +1414,18 @@ def heartbeat():
 
 
 # --- Execução ---
+
+# Registro do filtro Jinja2 'datetime' no contexto final do app
+def datetime_filter(value, format='%d/%m/%Y %H:%M'):
+    from datetime import datetime
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value)
+        except Exception:
+            return value
+    return value.strftime(format)
+app.jinja_env.filters['datetime'] = datetime_filter
+
 if __name__ == "__main__":
     print("🚀 FlashStudy iniciando...")
     print("📂 Dados serão salvos em:", DATA_DIR)

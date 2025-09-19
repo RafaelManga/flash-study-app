@@ -1,3 +1,180 @@
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 32px;
+  margin-bottom: 32px;
+}
+.flip-card {
+  background: transparent;
+  width: 100%;
+  height: 220px;
+  perspective: 1200px;
+  cursor: pointer;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px #0003;
+  transition: box-shadow 0.2s;
+}
+.flip-card:hover {
+  box-shadow: 0 8px 32px #6366f144;
+}
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(.4,2,.3,1);
+  transform-style: preserve-3d;
+}
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+.flip-card-front, .flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 500;
+  box-shadow: 0 2px 12px #0002;
+}
+.flip-card-front {
+  background: linear-gradient(135deg,#6366f1 60%,#23272f 100%);
+  color: #fff;
+  box-shadow: 0 4px 24px #6366f144, 0 1px 8px #0006;
+}
+.flip-card-back {
+  background: linear-gradient(135deg,#22c55e 60%,#23272f 100%);
+  color: #fff;
+  transform: rotateY(180deg);
+  flex-direction: column;
+  box-shadow: 0 4px 24px #22c55e44, 0 1px 8px #0006;
+}
+.flip-card .q {
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 0 16px;
+}
+.flip-card .back-content {
+  font-size: 1.3rem;
+  font-weight: 500;
+  text-align: center;
+  padding: 0 16px;
+}
+.flip-card .card-footer {
+  margin-top: 18px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.feed-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 24px 0;
+}
+.feed-card {
+  background: #23272f;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px #0002;
+  margin-bottom: 24px;
+  padding: 18px 20px;
+}
+.feed-header {
+  display: flex;
+  gap: 12px;
+  font-size: 0.95rem;
+  color: #888;
+  margin-bottom: 8px;
+}
+.feed-tipo {
+  font-weight: bold;
+  color: #6366f1;
+}
+.feed-user {
+  color: #ec4899;
+}
+.feed-data {
+  color: #22c55e;
+}
+.feed-descricao {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+.feed-actions {
+  margin-bottom: 10px;
+}
+.btn-curtir {
+  background: linear-gradient(90deg,#6366f1,#ec4899);
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  padding: 6px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-right: 8px;
+}
+.feed-comentarios {
+  background: #22242b;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.feed-comentarios ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px 0;
+}
+.feed-comentarios li {
+  margin-bottom: 4px;
+  color: #eee;
+}
+.feed-comentarios form {
+  display: flex;
+  gap: 8px;
+}
+.feed-comentarios input[type="text"] {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+  background: #181a20;
+  color: #fff;
+}
+.feed-comentarios button {
+  background: linear-gradient(90deg,#6366f1,#ec4899);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.badges-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+.badge-chip {
+  background: linear-gradient(90deg,#6366f1,#ec4899);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-weight: 500;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px #0002;
+}
+.conquista-chip {
+  background: linear-gradient(90deg,#22c55e,#3b82f6);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-weight: 500;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px #0002;
+}
 .chip-amigo {
   background: linear-gradient(90deg,#6366f1,#22d3ee);
   color: #fff;

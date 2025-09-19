@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="feed-container">
+  <h2>Feed Social</h2>
+  {% for atividade in atividades %}
+    <div class="feed-card">
+      <div class="feed-header">
+        <span class="feed-tipo">{{ atividade.tipo|capitalize }}</span>
+        <span class="feed-user">{{ atividade.usuario_id }}</span>
+        <span class="feed-data">{{ atividade.data|datetime }}</span>
+      </div>
+      <div class="feed-descricao">{{ atividade.descricao }}</div>
+      <div class="feed-actions">
+        <button class="btn-curtir" onclick="curtirFeed({{ loop.index0 }})">👍 {{ atividade.likes|length }}</button>
+      </div>
+      <div class="feed-comentarios">
+        <h4>Comentários</h4>
+        <ul>
+          {% for comentario in atividade.comentarios %}
+            <li><strong>{{ comentario.usuario_id }}</strong>: {{ comentario.texto }}</li>
+          {% endfor %}
+        </ul>
+        <form onsubmit="comentarFeed(event, {{ loop.index0 }})">
+          <input type="text" name="texto" placeholder="Comente..." required>
+          <button type="submit">Enviar</button>
+        </form>
+      </div>
+    </div>
+  {% else %}
+    <div style="color:#888;text-align:center;margin:32px;">Nenhuma atividade recente.</div>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function curtirFeed(idx) {
+  fetch('/feed/curtir', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ atividade_idx: idx })
+  }).then(() => location.reload());
+}
+function comentarFeed(e, idx) {
+  e.preventDefault();
+  const texto = e.target.texto.value;
+  fetch('/feed/comentar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ atividade_idx: idx, texto })
+  }).then(() => location.reload());
+}
+</script>
+{% endblock %}

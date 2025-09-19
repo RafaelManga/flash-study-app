@@ -69,25 +69,5 @@
     </div>
 </div>
 
-<script>
-
-function flipCard(cardId) {
-    const card = document.getElementById(cardId);
-    card.classList.toggle('flipped');
-}
-
-// Animação de entrada
-document.addEventListener("DOMContentLoaded", function() {
-    const cards = document.querySelectorAll('.flip-card');
-    cards.forEach((card, index) => {
-        card.style.opacity = "0";
-        card.style.transform = "translateY(30px)";
-        setTimeout(() => {
-            card.style.transition = "all 0.6s ease";
-            card.style.opacity = "1";
-            card.style.transform = "translateY(0)";
-        }, index * 100);
-    });
-});
-</script>
+<script src="{{ url_for('static', filename='js/flipcard.js') }}"></script>
 {% endblock %}

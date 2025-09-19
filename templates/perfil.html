@@ -1,3 +1,18 @@
+<div class="card">
+    <h3>🏆 Conquistas & Badges</h3>
+    <div class="badges-list">
+        {% if usuario.badges|length == 0 and usuario.conquistas|length == 0 %}
+            <span style="color:#888">Nenhuma conquista ou badge ainda. Complete missões e desafios para ganhar!</span>
+        {% else %}
+            {% for badge in usuario.badges %}
+                <span class="badge-chip">🏅 {{ badge }}</span>
+            {% endfor %}
+            {% for conquista in usuario.conquistas %}
+                <span class="conquista-chip">🏆 {{ conquista }}</span>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
 {% extends "base.html" %}
 {% block title %}Meu Perfil - FlashStudy{% endblock %}
 
