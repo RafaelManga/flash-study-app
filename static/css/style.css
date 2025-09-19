@@ -1,3 +1,46 @@
+.chip-amigo {
+  background: linear-gradient(90deg,#6366f1,#22d3ee);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: box-shadow 0.2s, background 0.2s;
+  box-shadow: 0 2px 8px #0002;
+}
+.chip-amigo.selected {
+  background: linear-gradient(90deg,#22c55e,#3b82f6);
+  color: #fff;
+  box-shadow: 0 2px 12px #22c55e44;
+}
+/* Chips de baralhos */
+.chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 0 0;
+}
+.chip-baralho {
+  background: linear-gradient(90deg,#6366f1,#ec4899);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: box-shadow 0.2s, background 0.2s;
+  box-shadow: 0 2px 8px #0002;
+}
+.chip-baralho.selected {
+  background: linear-gradient(90deg,#22c55e,#3b82f6);
+  color: #fff;
+  box-shadow: 0 2px 12px #22c55e44;
+}
+.chip-disabled {
+  background: #222;
+  color: #aaa;
+  padding: 8px 16px;
+  border-radius: 20px;
+}
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 

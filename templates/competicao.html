@@ -1,0 +1,69 @@
+<script>
+  window.amigos = {{ amigos|tojson }};
+  window.baralhos = {{ baralhos|tojson }};
+</script>
+{% extends 'base.html' %}
+{% block content %}
+<div class="competicao-container">
+  <h2 class="titulo">Competições entre Amigos</h2>
+  <div class="competicao-actions">
+    <button class="btn-desafiar" onclick="abrirDesafio()">Desafiar Amigo</button>
+    <button class="btn-ranking" onclick="abrirRanking()">Ver Ranking</button>
+  </div>
+  <div class="desafios-pendentes">
+    <h3 style="text-align:center;margin:32px 0 16px 0;">Desafios Pendentes</h3>
+    <ul id="desafios-list" style="list-style:none;padding:0;"></ul>
+  </div>
+  <div id="desafio-form" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" onclick="fecharDesafio()">&times;</span>
+      <h3>Desafiar um amigo</h3>
+      <form id="formDesafio">
+        <div class="form-group">
+          <label>Amigos (Clique para selecionar):</label>
+          <div id="chips-amigos" class="chips-container">
+            {% if amigos|length == 0 %}
+              <span class="chip-disabled">Nenhum amigo encontrado</span>
+            {% else %}
+              {% for amigo in amigos %}
+                <span class="chip-amigo" data-id="{{ amigo.id }}">{{ amigo.nome }}</span>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <input type="hidden" id="amigo" name="amigo">
+        </div>
+        <div class="form-group">
+          <label>Baralhos (Clique para selecionar):</label>
+          <div id="chips-baralhos" class="chips-container">
+            {% if baralhos|length == 0 %}
+              <span class="chip-disabled">Nenhum baralho encontrado</span>
+            {% else %}
+              {% for deck in baralhos %}
+                <span class="chip-baralho" data-id="{{ deck.id }}">{{ deck.nome }}</span>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <input type="hidden" id="decks" name="decks">
+        </div>
+        <button type="submit" class="btn-enviar btn-gradient">Enviar Desafio</button>
+  </form>
+  <!-- Desafios pendentes só aparecem na página principal, não no modal -->
+    </div>
+  </div>
+  <div id="ranking" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" onclick="fecharRanking()">&times;</span>
+      <h3>Ranking de Competições</h3>
+      <ul id="ranking-list"></ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.amigos = {{ amigos|tojson|safe }};
+  window.baralhos = {{ baralhos|tojson|safe }};
+  window.usuario = { id: "{{ usuario.id }}" };
+</script>
+<script src="{{ url_for('static', filename='js/competicao.js') }}"></script>
+{% endblock %}

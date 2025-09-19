@@ -1,3 +1,5 @@
+# --- Rotas de competição (após definição do app e dados) ---
+# ...existing code...
 
 
 #!/usr/bin/env python3
@@ -88,6 +90,73 @@ baralhos = carregar_dados(BARALHOS_PATH, {})
 shared_decks = carregar_dados(SHARED_DECKS_PATH, {})
 friend_requests = carregar_dados(FRIEND_REQUESTS_PATH, {})
 deck_invites = carregar_dados(DECK_INVITES_PATH, {})
+
+# --- Rota para listar desafios pendentes ---
+@app.route('/competicao/desafios')
+def desafios_pendentes():
+    if "user_id" not in session:
+        return jsonify({"desafios": []})
+    user_id = session["user_id"]
+    usuario = usuarios[user_id]
+    desafios = []
+    for comp in usuario.get("competicoes", []):
+        if comp.get("user2") == user_id and comp.get("status") == "pendente":
+            desafios.append({
+                "id": comp["id"],
+                "de": usuarios[comp["user1"]]["nome"] if comp["user1"] in usuarios else comp["user1"],
+                "baralho": comp.get("deck_id", "")
+            })
+    return jsonify({"desafios": desafios})
+
+# --- Rota para recusar desafio ---
+@app.route('/competicao/recusar', methods=['POST'])
+def recusar_competicao():
+    data = request.json
+    comp_id = data.get('comp_id')
+    for uid, user in usuarios.items():
+        for comp in user.get("competicoes", []):
+            if comp.get("id") == comp_id:
+                comp["status"] = "recusado"
+                salvar_dados(USERS_PATH, usuarios)
+                return jsonify({"msg": "Desafio recusado!"})
+    return jsonify({"msg": "Desafio não encontrado."}), 404
+
+# --- Rotas de Competição entre Amigos ---
+from utils import Competicao, criar_competicao
+
+@app.route('/competicao/convidar', methods=['POST'])
+def convidar_competicao():
+    data = request.json
+    user1 = data.get('user1')
+    user2 = data.get('user2')
+    deck_ids = data.get('deck_ids', [])
+    criados = []
+    if user2 in usuarios:
+        for deck_id in deck_ids:
+            comp = criar_competicao(user1, user2, deck_id)
+            usuarios[user2].setdefault("competicoes", []).append(comp.to_dict())
+            criados.append(comp.to_dict())
+        salvar_dados(USERS_PATH, usuarios)
+    return jsonify({"msg": f"{len(criados)} desafio(s) enviado(s)!", "competicoes": criados})
+
+@app.route('/competicao/aceitar', methods=['POST'])
+def aceitar_competicao():
+    data = request.json
+    comp_id = data.get('comp_id')
+    # Procurar e atualizar status do desafio para 'aceita'
+    for uid, user in usuarios.items():
+        for comp in user.get("competicoes", []):
+            if comp.get("id") == comp_id:
+                comp["status"] = "aceita"
+                salvar_dados(USERS_PATH, usuarios)
+                return jsonify({"msg": "Competição aceita!", "comp_id": comp_id})
+    return jsonify({"msg": "Desafio não encontrado."}), 404
+
+@app.route('/competicao/ranking', methods=['GET'])
+def ranking_competicao():
+    # Aqui você buscaria e retornaria o ranking dos amigos
+    ranking = []
+    return jsonify({"ranking": ranking})
 
 
 # --- Funções Auxiliares ---
@@ -187,6 +256,45 @@ def index():
     if "user_id" in session:
         return redirect(url_for("home"))
     return redirect(url_for("login"))
+
+# --- Página de Competição ---
+@app.route("/competicao")
+def pagina_competicao():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user_id = session["user_id"]
+    usuario = usuarios[user_id]
+
+    # Buscar amigos do usuário logado (nomes reais)
+    # Lista de amigos: id e nome
+    amigos = []
+    for friend_id in usuario.get("friends", []):
+        amigo = usuarios.get(friend_id)
+        if amigo:
+            amigos.append({
+                "id": friend_id,
+                "nome": amigo.get("nome") or amigo.get("email") or friend_id
+            })
+
+    # Lista de baralhos: id e nome
+    user_baralhos = []
+    baralhos_usuario = baralhos.get(user_id) or baralhos.get(usuario.get("email")) or baralhos.get(usuario.get("nome"))
+    if baralhos_usuario:
+        if isinstance(baralhos_usuario, dict):
+            for deck_id, deck in baralhos_usuario.items():
+                if isinstance(deck, dict):
+                    nome = deck.get("nome") or deck_id
+                else:
+                    nome = deck_id
+                user_baralhos.append({"id": deck_id, "nome": nome})
+        elif isinstance(baralhos_usuario, list):
+            for idx, deck in enumerate(baralhos_usuario):
+                if isinstance(deck, dict):
+                    nome = deck.get("nome") or f"Baralho {idx+1}"
+                else:
+                    nome = f"Baralho {idx+1}"
+                user_baralhos.append({"id": str(idx), "nome": nome})
+    return render_template("competicao.html", usuario=usuario, amigos=amigos, baralhos=user_baralhos)
 
 
 # --- Autenticação ---

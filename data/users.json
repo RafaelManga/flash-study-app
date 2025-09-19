@@ -1,0 +1,36 @@
+{
+  "USRSZD0XV8": {
+    "id": "USRSZD0XV8",
+    "nome": "Rafael",
+    "email": "teste@gmail.com",
+    "senha": "$2b$12$BIiWpNvYS2gcqK1qkgarUOYgDndqFQeXJzyL1JaF6.49PrHe3F/PK",
+    "avatar": "",
+    "points": 0,
+    "last_seen": 1758240943,
+    "friends": [
+      "USRWRPWIHU"
+    ],
+    "ultimo_uso_ia": 0,
+    "data_criacao": 1758240753,
+    "data_nascimento": "",
+    "frase_pessoal": "",
+    "tema": "dark"
+  },
+  "USRWRPWIHU": {
+    "id": "USRWRPWIHU",
+    "nome": "Grey",
+    "email": "rmsrafael05@hotmail.com",
+    "senha": "$2b$12$R6WcmCPZnFnl5UMLd255p.M71zY3S4L6xAp9M9vthM04s4oFrmUpW",
+    "avatar": "",
+    "points": 0,
+    "last_seen": 1758241000,
+    "friends": [
+      "USRSZD0XV8"
+    ],
+    "ultimo_uso_ia": 0,
+    "data_criacao": 1758240849,
+    "data_nascimento": "",
+    "frase_pessoal": "",
+    "tema": "dark"
+  }
+}

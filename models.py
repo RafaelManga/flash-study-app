@@ -9,6 +9,7 @@ class Usuario:
         self.points = points
         self.last_seen = last_seen
         self.friends = friends if friends is not None else []
+        self.competicoes = []  # Lista de competições/desafios ativos
 
     def to_dict(self):
         return {
@@ -20,4 +21,5 @@ class Usuario:
             "points": self.points,
             "last_seen": self.last_seen,
             "friends": self.friends
+            ,"competicoes": self.competicoes
         }
