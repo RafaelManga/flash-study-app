@@ -27,8 +27,26 @@
                 <span class="resultado-valor pontos">+{{ resultado.pontos_ganhos }}</span>
             </div>
         </div>
+        {% if resultado.novos_badges %}
+        <div class="badges-conquistados">
+            <h3>🏆 Novos Badges Conquistados!</h3>
+            <div class="badges-grid">
+                {% for badge in resultado.novos_badges %}
+                <div class="badge-card conquistado">
+                    <div class="badge-icon">{{ badge.icone }}</div>
+                    <div class="badge-info">
+                        <h4>{{ badge.nome }}</h4>
+                        <p>{{ badge.descricao }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
         <div class="resultado-actions">
             <a href="{{ url_for('desafio') }}" class="btn">🔄 Novo Desafio</a>
+            <a href="{{ url_for('badges') }}" class="btn">🏅 Ver Badges</a>
             <a href="{{ url_for('home') }}" class="btn ghost">🏠 Início</a>
         </div>
     </div>
@@ -175,6 +193,65 @@
 @keyframes bounce {
     0% { transform: translateY(0); }
     100% { transform: translateY(-12px); }
+}
+
+.badges-conquistados {
+    margin: 24px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-radius: 12px;
+    border: 2px solid #10b981;
+}
+
+.badges-conquistados h3 {
+    color: #10b981;
+    text-align: center;
+    margin-bottom: 16px;
+    font-size: 1.2rem;
+}
+
+.badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.badge-card {
+    background: #1e293b;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #10b981;
+    animation: slideIn 0.5s ease-out;
+}
+
+.badge-icon {
+    font-size: 1.8em;
+}
+
+.badge-info h4 {
+    color: #eaeaea;
+    margin: 0 0 4px 0;
+    font-size: 0.9rem;
+}
+
+.badge-info p {
+    color: #b8c1ec;
+    margin: 0;
+    font-size: 0.8rem;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 </style>
 {% endblock %}

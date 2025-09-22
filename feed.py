@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, session, jsonify
+from flask import Blueprint, render_template, request, session, jsonify, redirect, url_for
 import time
 from models import Atividade, Comentario
 
@@ -26,10 +26,18 @@ atividades = []
 @feed_bp.route('/feed')
 def feed():
     user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+    
     # Exibe atividades dos amigos e do próprio usuário
     amigos = []
-    if user_id and 'usuarios' in globals():
-        amigos = globals()['usuarios'][user_id].get('friends', [])
+    try:
+        from app import usuarios
+        if user_id in usuarios:
+            amigos = usuarios[user_id].get('friends', [])
+    except ImportError:
+        pass
+    
     atividades_exibir = [a for a in atividades if a.usuario_id == user_id or a.usuario_id in amigos]
     atividades_exibir.sort(key=lambda x: x.data, reverse=True)
     return render_template('feed.html', atividades=[a.to_dict() for a in atividades_exibir])

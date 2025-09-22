@@ -7,6 +7,94 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/competicao.css') }}">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+    <style>
+        /* Notificações de Badges */
+        .badge-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #10b981;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            max-width: 350px;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .badge-notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .badge-notification-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .badge-notification-icon {
+            font-size: 2.5em;
+            flex-shrink: 0;
+        }
+
+        .badge-notification-text {
+            flex: 1;
+            color: #eaeaea;
+        }
+
+        .badge-notification-text h4 {
+            margin: 0 0 4px 0;
+            color: #10b981;
+            font-size: 1.1rem;
+        }
+
+        .badge-notification-text p {
+            margin: 0 0 4px 0;
+            font-size: 0.9rem;
+        }
+
+        .badge-notification-text p:last-child {
+            color: #b8c1ec;
+            font-size: 0.8rem;
+        }
+
+        .badge-notification-close {
+            background: none;
+            border: none;
+            color: #b8c1ec;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+
+        .badge-notification-close:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .badge-notification {
+                right: 10px;
+                left: 10px;
+                max-width: none;
+                transform: translateY(-100px);
+            }
+            
+            .badge-notification.show {
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
     {% if usuario %}
@@ -25,6 +113,7 @@
                 {% endif %}
             </a>
             <a href="{{ url_for('pagina_competicao') }}" class="nav-item">🏆 Competições</a>
+            <a href="{{ url_for('badges') }}" class="nav-item">🏅 Badges</a>
             <a href="{{ url_for('perfil') }}" class="nav-item">👤 Perfil</a>
 
             <button class="theme-toggle" onclick="alternarTema()">
@@ -93,6 +182,45 @@
                 }, 5000);
             });
         });
+
+        // Sistema de notificações de badges
+        function mostrarNotificacaoBadge(badge) {
+            const notificacao = document.createElement('div');
+            notificacao.className = 'badge-notification';
+            notificacao.innerHTML = `
+                <div class="badge-notification-content">
+                    <div class="badge-notification-icon">${badge.icone}</div>
+                    <div class="badge-notification-text">
+                        <h4>🏆 Novo Badge!</h4>
+                        <p><strong>${badge.nome}</strong></p>
+                        <p>${badge.descricao}</p>
+                    </div>
+                    <button class="badge-notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(notificacao);
+            
+            // Animação de entrada
+            setTimeout(() => {
+                notificacao.classList.add('show');
+            }, 100);
+            
+            // Remove automaticamente após 5 segundos
+            setTimeout(() => {
+                notificacao.classList.remove('show');
+                setTimeout(() => notificacao.remove(), 300);
+            }, 5000);
+        }
+
+        // Verifica se há badges conquistados na sessão
+        {% if session.get('novos_badges') %}
+            {% for badge in session.get('novos_badges', []) %}
+                mostrarNotificacaoBadge({{ badge|tojson|safe }});
+            {% endfor %}
+            // Remove da sessão após mostrar
+            fetch('/limpar_badges_sessao', { method: 'POST' });
+        {% endif %}
     </script>
 
     {% block scripts %}{% endblock %}

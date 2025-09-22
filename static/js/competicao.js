@@ -122,6 +122,46 @@ document.getElementById('formDesafio').onsubmit = function(e) {
   });
 }
 
+function aceitarDesafio(comp_id) {
+  fetch('/competicao/aceitar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ comp_id: comp_id })
+  })
+  .then(res => res.json())
+  .then(data => {
+    mostrarMensagem(data.msg || 'Desafio aceito!', 'success');
+    
+    // Mostra notificações de badges se houver
+    if (data.novos_badges && data.novos_badges.length > 0) {
+      data.novos_badges.forEach(badge => {
+        mostrarNotificacaoBadge(badge);
+      });
+    }
+    
+    atualizarDesafios();
+  })
+  .catch(() => {
+    mostrarMensagem('Erro ao aceitar desafio.', 'danger');
+  });
+}
+
+function recusarDesafio(comp_id) {
+  fetch('/competicao/recusar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ comp_id: comp_id })
+  })
+  .then(res => res.json())
+  .then(data => {
+    mostrarMensagem(data.msg || 'Desafio recusado!', 'info');
+    atualizarDesafios();
+  })
+  .catch(() => {
+    mostrarMensagem('Erro ao recusar desafio.', 'danger');
+  });
+}
+
 function mostrarMensagem(msg, tipo) {
   const div = document.createElement('div');
   div.className = 'flash flash-' + tipo;
