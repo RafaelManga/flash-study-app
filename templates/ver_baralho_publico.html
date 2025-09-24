@@ -12,7 +12,7 @@
 {% if baralho.cards %}
     <div class="grid-cards">
         {% for card in baralho.cards %}
-        <div class="flip-card">
+        <div class="flip-card" role="button" tabindex="0" aria-label="Virar card" onclick="this.classList.toggle('flipped')">
             <div class="flip-card-inner">
                 <div class="flip-card-front">
                     <div class="q">{{ card.frente }}</div>

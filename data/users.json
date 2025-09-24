@@ -6,7 +6,7 @@
     "senha": "$2b$12$BIiWpNvYS2gcqK1qkgarUOYgDndqFQeXJzyL1JaF6.49PrHe3F/PK",
     "avatar": "",
     "points": 0,
-    "last_seen": 1758240943,
+    "last_seen": 1758740393,
     "friends": [
       "USRWRPWIHU"
     ],
@@ -31,6 +31,30 @@
     "data_criacao": 1758240849,
     "data_nascimento": "",
     "frase_pessoal": "",
-    "tema": "dark"
+    "tema": "dark",
+    "competicoes": [
+      {
+        "id": "comp_1758738314_USRSZD0XV8_USRWRPWIHU",
+        "user1": "USRSZD0XV8",
+        "user2": "USRWRPWIHU",
+        "deck_id": "matematica_fbbc",
+        "status": "pendente",
+        "pontuacao1": 0,
+        "pontuacao2": 0,
+        "inicio": 1758738314.2664027,
+        "fim": null
+      },
+      {
+        "id": "comp_1758739170_USRSZD0XV8_USRWRPWIHU",
+        "user1": "USRSZD0XV8",
+        "user2": "USRWRPWIHU",
+        "deck_id": "matematica_fbbc",
+        "status": "pendente",
+        "pontuacao1": 0,
+        "pontuacao2": 0,
+        "inicio": 1758739170.6036992,
+        "fim": null
+      }
+    ]
   }
 }

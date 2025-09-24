@@ -490,6 +490,20 @@ def home():
                            baralhos=user_baralhos,
                            baralhos_compartilhados=baralhos_compartilhados)
 
+@app.route("/meus_baralhos")
+@login_required
+def listar_baralhos():
+    # Monta visão unificada: próprios e compartilhados
+    user_baralhos = baralhos.get(g.user["id"], {})
+    baralhos_compartilhados = {}
+    for deck_id, deck_data in shared_decks.items():
+        if g.user["id"] in deck_data.get("members", []) or deck_data.get("owner") == g.user["id"]:
+            baralhos_compartilhados[deck_id] = deck_data
+    return render_template("meus_baralhos.html",
+                           baralhos=user_baralhos,
+                           baralhos_compartilhados=baralhos_compartilhados,
+                           usuarios=usuarios)
+
 
 @app.route("/alternar_tema", methods=["POST"])
 @login_required
@@ -590,6 +604,11 @@ def enviar_pedido_amizade():
 
     friend_name = usuarios[friend_id]["nome"]
     flash(f"Pedido de amizade enviado para {friend_name}!", "success")
+    try:
+        from feed import registrar_atividade
+        registrar_atividade('amizade', g.user["id"], f'Você enviou um pedido de amizade para {friend_name}')
+    except Exception:
+        pass
     return redirect(url_for("amigos"))
 
 
@@ -612,6 +631,12 @@ def aceitar_amizade(friend_id):
 
     friend_name = usuarios[friend_id]["nome"]
     flash(f"Agora você e {friend_name} são amigos!", "success")
+    try:
+        from feed import registrar_atividade
+        registrar_atividade('amizade', g.user["id"], f'Você adicionou {friend_name} como amigo')
+        registrar_atividade('amizade', friend_id, f'Você adicionou {g.user["nome"]} como amigo')
+    except Exception:
+        pass
     return redirect(url_for("amigos"))
 
 
@@ -733,6 +758,11 @@ def enviar_convite_baralho():
     friend_name = usuarios[friend_id]["nome"]
     baralho_nome = baralhos[g.user["id"]][baralho_id]["nome"]
     flash(f"Convite para o baralho '{baralho_nome}' enviado para {friend_name}!", "success")
+    try:
+        from feed import registrar_atividade
+        registrar_atividade('compartilhar', g.user["id"], f"Você compartilhou o baralho '{baralho_nome}' com {friend_name}")
+    except Exception:
+        pass
     return redirect(url_for("compartilhar_baralho", baralho_id=baralho_id))
 
 
@@ -759,6 +789,11 @@ def aceitar_convite_baralho(deck_id):
 
     deck_name = shared_decks[deck_id]["nome"]
     flash(f"Você agora tem acesso ao baralho compartilhado '{deck_name}'!", "success")
+    try:
+        from feed import registrar_atividade
+        registrar_atividade('compartilhar', g.user["id"], f"Você aceitou o convite para o baralho '{deck_name}'")
+    except Exception:
+        pass
     return redirect(url_for("amigos"))
 
 
@@ -1050,6 +1085,12 @@ def criar_card():
                 baralhos[user_id][baralho_existente]["cards"].append(new_card)
                 salvar_dados(BARALHOS_PATH, baralhos)
                 target_baralho = baralho_existente
+                try:
+                    from feed import registrar_atividade
+                    deck_nome = baralhos[user_id][baralho_existente]["nome"]
+                    registrar_atividade('criou_card', user_id, f"Criou um card no baralho '{deck_nome}'")
+                except Exception:
+                    pass
             elif baralho_existente in shared_decks:
                 # Verifica permissão no baralho compartilhado
                 deck_data = shared_decks[baralho_existente]
@@ -1057,6 +1098,12 @@ def criar_card():
                     shared_decks[baralho_existente]["cards"].append(new_card)
                     salvar_dados(SHARED_DECKS_PATH, shared_decks)
                     target_baralho = baralho_existente
+                    try:
+                        from feed import registrar_atividade
+                        deck_nome = deck_data.get("nome", baralho_existente)
+                        registrar_atividade('criou_card', user_id, f"Criou um card no baralho compartilhado '{deck_nome}'")
+                    except Exception:
+                        pass
                 else:
                     flash("Você não tem permissão para adicionar cards neste baralho.", "danger")
                     return redirect(url_for("criar_card"))
@@ -1071,6 +1118,12 @@ def criar_card():
             }
             salvar_dados(BARALHOS_PATH, baralhos)
             target_baralho = baralho_id
+            try:
+                from feed import registrar_atividade
+                registrar_atividade('criou_baralho', user_id, f"Criou o baralho '{novo_baralho}'")
+                registrar_atividade('criou_card', user_id, f"Criou um card no baralho '{novo_baralho}'")
+            except Exception:
+                pass
         else:
             flash("Selecione um baralho existente ou crie um novo.", "warning")
             return redirect(url_for("criar_card"))
@@ -1289,6 +1342,11 @@ def finalizar_desafio():
         "respostas": respostas
     }
     session.pop("desafio", None)
+    try:
+        from feed import registrar_atividade
+        registrar_atividade('desafio', g.user["id"], f"Finalizou um desafio: {acertos} acertos, {erros} erros, {pontos} pontos")
+    except Exception:
+        pass
     return render_template("resultado_desafio.html", resultado=resultado)
 
 

@@ -59,5 +59,8 @@ def curtir_feed():
 
 def registrar_atividade(tipo, usuario_id, descricao):
     atividades.append(Atividade(tipo, usuario_id, descricao))
+    # Mantém tamanho razoável do feed (opcional)
+    if len(atividades) > 500:
+        del atividades[:100]
 
 # Exemplo de uso: registrar_atividade('criou_baralho', 'USR123', 'Criou o baralho Matemática')

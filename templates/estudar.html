@@ -18,7 +18,7 @@
     {% if baralho.cards %}
     <div class="grid-cards">
         {% for card in baralho.cards %}
-        <div class="flip-card" id="card-{{ card.id }}" onclick="flipCard('card-{{ card.id }}')">
+        <div class="flip-card" id="card-{{ card.id }}" onclick="flipCard('card-{{ card.id }}')" role="button" tabindex="0" aria-pressed="false" aria-label="Virar card">
             <div class="flip-card-inner">
                 <div class="flip-card-front">
                     <div class="q">{{ card.frente }}</div>

@@ -16,8 +16,7 @@
 
 <!-- Navegação Rápida -->
 <nav style="display: flex; gap: 16px; margin-bottom: 18px; justify-content: flex-end;">
-    <a href="#meus-baralhos" style="font-weight: 600; color: var(--primary); text-decoration: none; padding: 8px 18px; border-radius: 8px; transition: background .2s;">Meus Baralhos</a>
-    <a href="#baralhos-compartilhados" style="font-weight: 600; color: var(--purple); text-decoration: none; padding: 8px 18px; border-radius: 8px; transition: background .2s;">Baralhos Compartilhados</a>
+    <!-- Navegação inferior removida em favor do novo bloco "Meus Baralhos e Compartilhados" -->
 </nav>
 <!-- Ações Rápidas e Navegação de Baralhos -->
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px;">
@@ -66,6 +65,15 @@
             </p>
         </div>
     </a>
+    <a href="{{ url_for('listar_baralhos') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">📚</div>
+            <h3 style="margin-bottom: 8px;">Meus Baralhos e Compartilhados</h3>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Acesse todos os seus baralhos e os que compartilham com você
+            </p>
+        </div>
+    </a>
 </div>
 
 
@@ -85,67 +93,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Seções de Baralhos logo após os botões -->
-<div style="margin-top: 32px;">
-    <span id="meus-baralhos"></span>
-    <!-- Seção: Meus Baralhos -->
-    <div style="margin-bottom: 48px;">
-        <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 1.5rem;">
-            📚 Meus Baralhos
-            <span style="background: var(--primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.9rem;">{{ baralhos|length }}</span>
-        </h2>
-        {% if baralhos %}
-        <div class="grid-baralhos">
-            {% for baralho_id, baralho in baralhos.items() %}
-            <div class="baralho-card hover-lift" style="--baralho-cor: {{ baralho.cor }};">
-                <div class="baralho-title">{{ baralho.nome }}</div>
-                <div class="baralho-stats">
-                    <span>📚 {{ baralho.cards|length }} cards</span>
-                </div>
-                <div class="baralho-actions">
-                    <a href="{{ url_for('estudar', baralho_id=baralho_id) }}" class="btn tiny">📖 Estudar</a>
-                    <a href="{{ url_for('compartilhar_baralho', baralho_id=baralho_id) }}" class="btn tiny ghost">🤝 Compartilhar</a>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div style="text-align:center; color:var(--muted);">Você não possui baralhos.</div>
-        {% endif %}
-    </div>
-
-    <span id="baralhos-compartilhados"></span>
-    <span id="baralhos-compartilhados"></span>
-    <!-- Seção: Baralhos Compartilhados -->
-    <div>
-        <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 1.5rem;">
-            🤝 Baralhos Compartilhados
-            <span style="background: var(--purple); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.9rem;">{{ baralhos_compartilhados|length }}</span>
-        </h2>
-        {% if baralhos_compartilhados %}
-        <div class="grid-baralhos">
-            {% for deck_id, deck_data in baralhos_compartilhados.items() %}
-            <div class="baralho-card hover-lift" style="--baralho-cor: {{ deck_data.cor }};">
-                <div class="baralho-title">{{ deck_data.nome }}</div>
-                <div class="baralho-stats">
-                    <span>📚 {{ deck_data.cards|length }} cards</span>
-                    <span>•</span>
-                    <span>👑 {{ usuarios[deck_data.owner].nome if deck_data.owner in usuarios else 'Desconhecido' }}</span>
-                </div>
-                <div class="baralho-actions">
-                    <a href="{{ url_for('estudar', baralho_id=deck_id) }}" class="btn tiny">📖 Estudar</a>
-                    {% set is_owner = deck_data.owner == usuario.id %}
-                    {% set perms = deck_data.permissoes[usuario.id] if deck_data.permissoes and usuario.id in deck_data.permissoes else {} %}
-                    {% if is_owner or perms.ler %}
-                    <a href="{{ url_for('gerenciar_baralho', baralho_id=deck_id) }}" class="btn tiny ghost" style="background: var(--purple); color: white;">🤝 Colaborativo</a>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div style="text-align:center; color:var(--muted);">Nenhum baralho compartilhado.</div>
-        {% endif %}
-    </div>
-</div>
+<!-- Seção inferior removida: agora acessível pelo bloco "Meus Baralhos e Compartilhados" acima -->
 {% endblock %}
