@@ -1,3 +1,5 @@
+import time
+
 class Atividade:
     def __init__(self, tipo, usuario_id, descricao, data=None, likes=None, comentarios=None):
         self.tipo = tipo  # Ex: 'criou_baralho', 'conquista', 'desafio', 'comentario'

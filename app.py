@@ -25,18 +25,33 @@ app = Flask(__name__)
 # Filtro Jinja2 para formatar datas
 from datetime import datetime
 def datetime_filter(value, format='%d/%m/%Y %H:%M'):
-    if isinstance(value, str):
+    try:
+        # Aceita timestamps numéricos (epoch)
+        if isinstance(value, (int, float)):
+            dt = datetime.fromtimestamp(value)
+            return dt.strftime(format)
+        # Aceita strings ISO
+        if isinstance(value, str):
+            try:
+                dt = datetime.fromisoformat(value)
+                return dt.strftime(format)
+            except Exception:
+                pass
+        # Objetos datetime ou similares
+        return value.strftime(format)
+    except Exception:
+        # Fallback seguro
         try:
-            value = datetime.fromisoformat(value)
+            return str(value)
         except Exception:
-            return value
-    return value.strftime(format)
+            return ''
 app.jinja_env.filters['datetime'] = datetime_filter
 app.secret_key = os.environ.get("SECRET_KEY", "flashstudy_secret_key_2024")
 bcrypt = Bcrypt(app)
 
 # Import e registro do blueprint do feed social
 from feed import feed_bp
+from achievements import increment_stat, award_if_eligible
 app.register_blueprint(feed_bp)
 def adicionar_conquista(user_id, conquista):
     if user_id in usuarios:
@@ -178,6 +193,14 @@ def recusar_competicao():
             if comp.get("id") == comp_id:
                 comp["status"] = "recusado"
                 salvar_dados(USERS_PATH, usuarios)
+                # Marca sequência de recusas
+                try:
+                    from achievements import increment_stat, award_if_eligible
+                    from feed import registrar_atividade
+                    increment_stat(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), uid, 'invites_refused_streak', 1)
+                    award_if_eligible(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), registrar_atividade, uid)
+                except Exception:
+                    pass
                 return jsonify({"msg": "Desafio recusado!"})
     return jsonify({"msg": "Desafio não encontrado."}), 404
 
@@ -197,6 +220,11 @@ def convidar_competicao():
             usuarios[user2].setdefault("competicoes", []).append(comp.to_dict())
             criados.append(comp.to_dict())
         salvar_dados(USERS_PATH, usuarios)
+        try:
+            from feed import registrar_atividade
+            registrar_atividade('desafio', user1, f'Enviou um desafio para {usuarios[user2]["nome"]} (deck {deck_ids[0]})')
+        except Exception:
+            pass
     return jsonify({"msg": f"{len(criados)} desafio(s) enviado(s)!", "competicoes": criados})
 
 @app.route('/competicao/aceitar', methods=['POST'])
@@ -223,6 +251,37 @@ def ranking_competicao():
     # Aqui você buscaria e retornaria o ranking dos amigos
     ranking = []
     return jsonify({"ranking": ranking})
+
+@app.route('/competicao/finalizar', methods=['POST'])
+def finalizar_competicao():
+    data = request.get_json(silent=True) or {}
+    comp_id = data.get('comp_id')
+    winner_id = data.get('winner_id')
+    pontos1 = data.get('pontos1')
+    pontos2 = data.get('pontos2')
+    deck_id = None
+    user1 = None
+    user2 = None
+    # Localiza competição e marca como finalizada
+    for uid, user in usuarios.items():
+        for comp in user.get('competicoes', []):
+            if comp.get('id') == comp_id:
+                comp['status'] = 'finalizada'
+                deck_id = comp.get('deck_id')
+                user1 = comp.get('user1')
+                user2 = comp.get('user2')
+    salvar_dados(USERS_PATH, usuarios)
+    try:
+        from feed import registrar_atividade
+        nome1 = usuarios.get(user1, {}).get('nome', user1)
+        nome2 = usuarios.get(user2, {}).get('nome', user2)
+        deck_nome = deck_id
+        vencedor_nome = usuarios.get(winner_id, {}).get('nome', winner_id)
+        perdedor_nome = nome1 if winner_id == user2 else nome2
+        registrar_atividade('resultado', winner_id, f"{vencedor_nome} venceu {perdedor_nome} em um desafio usando o baralho '{deck_nome}'!")
+    except Exception:
+        pass
+    return jsonify({"msg": "Resultado registrado no feed."})
 
 
 # --- Funções Auxiliares ---
@@ -637,6 +696,13 @@ def aceitar_amizade(friend_id):
         registrar_atividade('amizade', friend_id, f'Você adicionou {g.user["nome"]} como amigo')
     except Exception:
         pass
+    # Stats e conquistas sociais
+    try:
+        from achievements import increment_stat, award_if_eligible
+        increment_stat(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), g.user["id"], 'friends_added', 1)
+        award_if_eligible(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), registrar_atividade, g.user["id"])
+    except Exception:
+        pass
     return redirect(url_for("amigos"))
 
 
@@ -918,6 +984,14 @@ def gerar_ia():
             salvar_dados(BARALHOS_PATH, baralhos)
             salvar_dados(USERS_PATH, usuarios)
 
+            # Stats IA e checagem de conquistas
+            try:
+                from achievements import increment_stat, award_if_eligible
+                increment_stat(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), user_id, 'ia_cards_generated', len(cards_validos))
+                award_if_eligible(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), __import__('feed').feed.registrar_atividade if False else __import__('feed').registrar_atividade, user_id, { 'deck_cards_count': len(baralhos[user_id][baralho_id]["cards"]) })
+            except Exception:
+                pass
+
             flash(f"🎉 {len(cards_validos)} cards gerados com IA e adicionados ao baralho '{nome_baralho}'!", "success")
             return redirect(url_for("estudar", baralho_id=baralho_id))
 
@@ -1053,6 +1127,18 @@ def estudar(baralho_id):
         flash("Baralho não encontrado ou você não tem permissão para acessá-lo.", "danger")
         return redirect(url_for("home"))
 
+    # Contagem de revisão por baralho (para conquista)
+    try:
+        from achievements import award_if_eligible
+        stats = g.user.setdefault('stats', {})
+        deck_counts = stats.setdefault('deck_review_counts', {})
+        deck_counts[baralho_id] = deck_counts.get(baralho_id, 0) + 1
+        salvar_dados(USERS_PATH, usuarios)
+        from feed import registrar_atividade
+        award_if_eligible(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), registrar_atividade, g.user["id"]) 
+    except Exception:
+        pass
+
     return render_template("estudar.html",
                            baralho=baralho,
                            baralho_id=baralho_id,
@@ -1076,6 +1162,19 @@ def criar_card():
             return redirect(url_for("criar_card"))
 
         new_card = {"id": str(uuid4()), "frente": frente, "verso": verso}
+        # Humor: memecard / python
+        try:
+            from achievements import increment_stat, award_if_eligible
+            from feed import registrar_atividade
+            text_blob = f"{frente} {verso}".lower()
+            if any(k in text_blob for k in ["shrek", "doge", "rickroll", "sus", "among us"]):
+                increment_stat(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), g.user["id"], 'meme_cards', 1)
+                award_if_eligible(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), registrar_atividade, g.user["id"]) 
+            if any(k in text_blob for k in ["def ", "print(", "lambda ", "for ", "import ", "class "]):
+                increment_stat(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), g.user["id"], 'python_cards', 1)
+                award_if_eligible(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), registrar_atividade, g.user["id"]) 
+        except Exception:
+            pass
         user_id = g.user["id"]
 
         # Determina qual baralho usar
@@ -1089,6 +1188,8 @@ def criar_card():
                     from feed import registrar_atividade
                     deck_nome = baralhos[user_id][baralho_existente]["nome"]
                     registrar_atividade('criou_card', user_id, f"Criou um card no baralho '{deck_nome}'")
+                    increment_stat(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), user_id, 'cards_created', 1)
+                    award_if_eligible(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), registrar_atividade, user_id)
                 except Exception:
                     pass
             elif baralho_existente in shared_decks:
@@ -1102,6 +1203,8 @@ def criar_card():
                         from feed import registrar_atividade
                         deck_nome = deck_data.get("nome", baralho_existente)
                         registrar_atividade('criou_card', user_id, f"Criou um card no baralho compartilhado '{deck_nome}'")
+                        increment_stat(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), user_id, 'cards_created', 1)
+                        award_if_eligible(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), registrar_atividade, user_id)
                     except Exception:
                         pass
                 else:
@@ -1122,6 +1225,8 @@ def criar_card():
                 from feed import registrar_atividade
                 registrar_atividade('criou_baralho', user_id, f"Criou o baralho '{novo_baralho}'")
                 registrar_atividade('criou_card', user_id, f"Criou um card no baralho '{novo_baralho}'")
+                increment_stat(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), user_id, 'cards_created', 1)
+                award_if_eligible(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), registrar_atividade, user_id, { 'deck_cards_count': len(baralhos[user_id][baralho_id]["cards"]) })
             except Exception:
                 pass
         else:
@@ -1280,6 +1385,9 @@ def iniciar_desafio():
         "inicio": agora_timestamp()
     }
 
+    # Marca início para medir resposta relâmpago
+    session['desafio_started_at'] = agora_timestamp()
+    session['ultima_pergunta_ts'] = agora_timestamp()
     return render_template("executar_desafio.html", desafio=session["desafio"])
 
 
@@ -1304,6 +1412,20 @@ def responder_desafio():
     resposta_correta = card_atual["verso"].lower().strip()
     resposta_user = resposta_usuario.lower().strip()
     acertou = resposta_user == resposta_correta or (resposta_user in resposta_correta and len(resposta_user) > 2)
+
+    # Medir tempo de resposta
+    try:
+        agora = agora_timestamp()
+        pergunta_ts = session.get('ultima_pergunta_ts', agora)
+        elapsed = agora - pergunta_ts
+        session['ultima_pergunta_ts'] = agora  # para próxima
+        if elapsed <= 2 and acertou:
+            from achievements import increment_stat, award_if_eligible
+            from feed import registrar_atividade
+            increment_stat(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), g.user["id"], 'fast_answers', 1)
+            award_if_eligible(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), registrar_atividade, g.user["id"]) 
+    except Exception:
+        pass
 
     return jsonify({
         "acertou": acertou,
@@ -1345,6 +1467,14 @@ def finalizar_desafio():
     try:
         from feed import registrar_atividade
         registrar_atividade('desafio', g.user["id"], f"Finalizou um desafio: {acertos} acertos, {erros} erros, {pontos} pontos")
+    except Exception:
+        pass
+    # Conquistas relacionadas a desafio/pontos
+    try:
+        from achievements import increment_stat, award_if_eligible
+        increment_stat(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), g.user["id"], 'quizzes_finished', 1)
+        increment_stat(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), g.user["id"], 'points_gained', max(pontos, 0))
+        award_if_eligible(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), registrar_atividade, g.user["id"])
     except Exception:
         pass
     return render_template("resultado_desafio.html", resultado=resultado)
@@ -1468,20 +1598,49 @@ def api_atualizar_permissoes(baralho_id, member_id):
 def heartbeat():
     g.user["last_seen"] = agora_timestamp()
     salvar_dados(USERS_PATH, usuarios)
+    # Conquista de madrugada e congelado
+    try:
+        from achievements import set_stat, award_if_eligible
+        from datetime import datetime
+        now = datetime.now()
+        if 2 <= now.hour < 4:
+            stats = g.user.setdefault('stats', {})
+            stats['late_night_visits'] = stats.get('late_night_visits', 0) + 1
+            salvar_dados(USERS_PATH, usuarios)
+        # Inatividade 7 dias
+        last_seen = g.user.get('last_seen', 0)
+        prev_seen = g.user.get('prev_seen', last_seen)
+        g.user['prev_seen'] = last_seen
+        if prev_seen and (agora_timestamp() - prev_seen) >= 7*24*3600:
+            stats = g.user.setdefault('stats', {})
+            stats['inactive_7_days'] = 1
+            salvar_dados(USERS_PATH, usuarios)
+        from feed import registrar_atividade
+        award_if_eligible(usuarios, lambda: salvar_dados(USERS_PATH, usuarios), registrar_atividade, g.user["id"]) 
+    except Exception:
+        pass
     return jsonify({"status": "ok"})
 
 
 # --- Execução ---
 
-# Registro do filtro Jinja2 'datetime' no contexto final do app
+# Registro do filtro Jinja2 'datetime' no contexto final do app (robusto p/ epoch/ISO)
 def datetime_filter(value, format='%d/%m/%Y %H:%M'):
-    from datetime import datetime
-    if isinstance(value, str):
+    try:
+        from datetime import datetime
+        if isinstance(value, (int, float)):
+            return datetime.fromtimestamp(value).strftime(format)
+        if isinstance(value, str):
+            try:
+                return datetime.fromisoformat(value).strftime(format)
+            except Exception:
+                pass
+        return value.strftime(format)
+    except Exception:
         try:
-            value = datetime.fromisoformat(value)
+            return str(value)
         except Exception:
-            return value
-    return value.strftime(format)
+            return ''
 app.jinja_env.filters['datetime'] = datetime_filter
 
 if __name__ == "__main__":

@@ -1,0 +1,28 @@
+[
+  {
+    "tipo": "compartilhar",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Você compartilhou o baralho 'matematica' com Grey",
+    "data": 1758813443.0827596,
+    "likes": [
+      "USRSZD0XV8"
+    ],
+    "comentarios": [
+      {
+        "usuario_id": "USRSZD0XV8",
+        "texto": "ai sim",
+        "data": 1758813681.977942
+      }
+    ]
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Finalizou um desafio: 1 acertos, 0 erros, 10 pontos",
+    "data": 1758813701.601105,
+    "likes": [
+      "USRSZD0XV8"
+    ],
+    "comentarios": []
+  }
+]

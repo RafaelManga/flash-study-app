@@ -97,6 +97,26 @@
   margin: 0 auto;
   padding: 24px 0;
 }
+.dm-bar .dm-select, .dm-bar .dm-input {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+.btn.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+}
+.btn.btn-icon .icon-plane {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+.btn.btn-icon:hover .icon-plane {
+  transform: translateY(-1px);
+}
+#dm-toast { transition: opacity .3s ease, transform .3s ease; }
 .feed-card {
   background: #23272f;
   border-radius: 12px;
@@ -128,16 +148,14 @@
 .feed-actions {
   margin-bottom: 10px;
 }
-.btn-curtir {
-  background: linear-gradient(90deg,#6366f1,#ec4899);
+.like-btn {
+  background: linear-gradient(135deg, var(--purple), var(--pink));
   color: #fff;
-  border: none;
-  border-radius: 16px;
-  padding: 6px 16px;
-  cursor: pointer;
-  font-weight: 500;
-  margin-right: 8px;
+  border-radius: 999px;
+  padding: 8px 14px;
 }
+.like-btn .icon { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2)); }
+.like-btn:hover { box-shadow: 0 6px 16px rgba(236,72,153,0.25); }
 .feed-comentarios {
   background: #22242b;
   border-radius: 8px;

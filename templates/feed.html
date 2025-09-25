@@ -2,19 +2,40 @@
 {% block content %}
 <div class="feed-container">
   <h2>Feed Social</h2>
+  <div class="dm-bar" style="display:flex;gap:12px;align-items:center;margin:12px 0;">
+    <select id="dm-amigo" class="dm-select" style="flex:1;">
+      <option value="">Selecionar amigo para mensagem</option>
+      {% for amigo in amigos %}
+        <option value="{{ amigo.id }}">{{ amigo.nome }}</option>
+      {% endfor %}
+    </select>
+    <input id="dm-texto" class="dm-input" type="text" placeholder="Escreva uma mensagem privada..." style="flex:2;"/>
+    <button id="dm-send" class="btn btn-icon" title="Enviar" aria-label="Enviar" onclick="enviarDM()">
+      <span class="icon-plane" aria-hidden="true">✈️</span>
+      <span class="btn-text">Enviar</span>
+    </button>
+  </div>
+  <div id="dm-toast" class="flash flash-info" style="display:none;margin-top:8px;">Mensagem enviada</div>
+  <div id="dm-historico" class="card" style="display:none;max-height:240px;overflow:auto;margin:12px 0;padding:12px;"></div>
   {% for atividade in atividades %}
-    <div class="feed-card">
+    <div class="feed-card hover-lift">
       <div class="feed-header">
-        <span class="feed-tipo">{{ atividade.tipo|capitalize }}</span>
-        <span class="feed-user">{{ atividade.usuario_id }}</span>
+        <span class="feed-tipo">{{ atividade.icone }} {{ atividade.tipo|capitalize }}</span>
+        <span class="feed-user">{{ atividade.usuario_nome }}</span>
         <span class="feed-data">{{ atividade.data|datetime }}</span>
       </div>
       <div class="feed-descricao">{{ atividade.descricao }}</div>
       <div class="feed-actions">
-        <button class="btn-curtir" onclick="curtirFeed({{ loop.index0 }})">👍 {{ atividade.likes|length }}</button>
+        <button class="btn btn-icon like-btn" onclick="curtirFeed({{ loop.index0 }})" title="Curtir">
+          <span class="icon">👍</span>
+          <span>{{ atividade.likes|length }}</span>
+        </button>
       </div>
       <div class="feed-comentarios">
-        <h4>Comentários</h4>
+        <h4 style="display:flex;align-items:center;gap:8px;">
+          <span>Comentários</span>
+          <span class="muted" style="font-size:0.85rem;">{{ atividade.comentarios|length }}</span>
+        </h4>
         <ul>
           {% for comentario in atividade.comentarios %}
             <li><strong>{{ comentario.usuario_id }}</strong>: {{ comentario.texto }}</li>
@@ -22,7 +43,10 @@
         </ul>
         <form onsubmit="comentarFeed(event, {{ loop.index0 }})">
           <input type="text" name="texto" placeholder="Comente..." required>
-          <button type="submit">Enviar</button>
+          <button type="submit" class="btn btn-icon" title="Comentar">
+            <span>💬</span>
+            <span class="btn-text">Enviar</span>
+          </button>
         </form>
       </div>
     </div>
@@ -33,6 +57,7 @@
 {% endblock %}
 {% block scripts %}
 <script>
+let lastNow = 0;
 function curtirFeed(idx) {
   fetch('/feed/curtir', {
     method: 'POST',
@@ -48,6 +73,54 @@ function comentarFeed(e, idx) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ atividade_idx: idx, texto })
   }).then(() => location.reload());
+}
+
+function pollFeed() {
+  const url = lastNow ? `/feed/list?since=${lastNow}` : '/feed/list';
+  fetch(url).then(r => r.json()).then(data => {
+    if (data.atividades && data.atividades.length) {
+      location.reload();
+    }
+    if (data.now) lastNow = data.now;
+  }).catch(() =>{});
+}
+setInterval(pollFeed, 10000);
+
+const dmSelect = document.getElementById('dm-amigo');
+dmSelect && dmSelect.addEventListener('change', () => carregarDM());
+
+function carregarDM() {
+  const friend_id = document.getElementById('dm-amigo').value;
+  const box = document.getElementById('dm-historico');
+  if (!friend_id) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  fetch(`/feed/dm/list?friend_id=${encodeURIComponent(friend_id)}`)
+    .then(r => r.json())
+    .then(data => {
+      box.style.display = 'block';
+      box.innerHTML = (data.msgs || []).map(m => `<div><strong>${m.from}</strong>: ${m.texto} <span style="color:#888;font-size:0.8em;">(${new Date(m.ts*1000).toLocaleString()})</span></div>`).join('');
+      box.scrollTop = box.scrollHeight;
+    });
+}
+
+function enviarDM() {
+  const friend_id = document.getElementById('dm-amigo').value;
+  const texto = document.getElementById('dm-texto').value.trim();
+  if (!friend_id || !texto) return;
+  const btn = document.getElementById('dm-send');
+  btn.classList.add('loading');
+  fetch('/feed/dm/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ friend_id, texto })
+  }).then(() => { 
+    document.getElementById('dm-texto').value=''; 
+    carregarDM(); 
+    const toast = document.getElementById('dm-toast');
+    toast.style.display='block';
+    toast.style.opacity='1';
+    toast.style.transform='translateY(0)';
+    setTimeout(()=>{ toast.style.opacity='0'; toast.style.transform='translateY(-6px)'; setTimeout(()=>{toast.style.display='none';},300); },1500);
+  }).finally(()=> btn.classList.remove('loading'));
 }
 </script>
 {% endblock %}

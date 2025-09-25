@@ -18,7 +18,7 @@
             <p style="color: var(--muted); margin-bottom: 8px;">ID: <span class="user-id" id="amigo-id">{{ amigo.id }}</span>
                 <button class="btn tiny" style="margin-left:8px; padding:2px 8px; font-size:0.9em;" onclick="copiarTexto('{{ amigo.id }}', event)">Copiar</button>
             </p>
-            <p style="color: var(--muted); margin-bottom: 8px;">Pontos: {{ amigo.points }}</p>
+            <p style="color: var(--muted); margin-bottom: 8px;">Pontos: {{ amigo.points or 0 }}</p>
             {% if amigo.frase_pessoal %}
                 <p style="color: var(--text); font-style: italic; margin-top: 16px; padding: 12px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border);">
                     "{{ amigo.frase_pessoal }}"
@@ -29,7 +29,19 @@
             {% endif %}
             <div style="margin-top: 16px;">
                 <strong>Conquistas:</strong>
-                <span style="color: var(--primary);">(em breve)</span>
+                <div class="badges-list" style="margin-top:8px;">
+                    {% set tem = (amigo.badges and amigo.badges|length>0) or (amigo.conquistas and amigo.conquistas|length>0) %}
+                    {% if tem %}
+                        {% for badge in amigo.badges or [] %}
+                            <span class="badge-chip">🏅 {{ badge }}</span>
+                        {% endfor %}
+                        {% for conquista in amigo.conquistas or [] %}
+                            <span class="conquista-chip">🏆 {{ conquista }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span style="color:#888">Nenhuma conquista ainda.</span>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -59,7 +71,6 @@ function copiarTexto(texto, event) {
             }, 1500);
         });
     } else {
-        // Fallback
         const tempInput = document.createElement('input');
         tempInput.value = texto;
         document.body.appendChild(tempInput);

@@ -5,16 +5,18 @@
     "email": "teste@gmail.com",
     "senha": "$2b$12$BIiWpNvYS2gcqK1qkgarUOYgDndqFQeXJzyL1JaF6.49PrHe3F/PK",
     "avatar": "",
-    "points": 0,
-    "last_seen": 1758740393,
-    "friends": [
-      "USRWRPWIHU"
-    ],
+    "points": 30,
+    "last_seen": 1758815671,
+    "friends": [],
     "ultimo_uso_ia": 0,
     "data_criacao": 1758240753,
     "data_nascimento": "",
     "frase_pessoal": "",
-    "tema": "dark"
+    "tema": "dark",
+    "prev_seen": 1758815611,
+    "badges": [],
+    "conquistas": [],
+    "stats": {}
   },
   "USRWRPWIHU": {
     "id": "USRWRPWIHU",
@@ -24,9 +26,7 @@
     "avatar": "",
     "points": 0,
     "last_seen": 1758241000,
-    "friends": [
-      "USRSZD0XV8"
-    ],
+    "friends": [],
     "ultimo_uso_ia": 0,
     "data_criacao": 1758240849,
     "data_nascimento": "",
@@ -53,6 +53,28 @@
         "pontuacao1": 0,
         "pontuacao2": 0,
         "inicio": 1758739170.6036992,
+        "fim": null
+      },
+      {
+        "id": "comp_1758812148_USRSZD0XV8_USRWRPWIHU",
+        "user1": "USRSZD0XV8",
+        "user2": "USRWRPWIHU",
+        "deck_id": "matematica_fbbc",
+        "status": "pendente",
+        "pontuacao1": 0,
+        "pontuacao2": 0,
+        "inicio": 1758812148.7815654,
+        "fim": null
+      },
+      {
+        "id": "comp_1758812666_USRSZD0XV8_USRWRPWIHU",
+        "user1": "USRSZD0XV8",
+        "user2": "USRWRPWIHU",
+        "deck_id": "matematica_fbbc",
+        "status": "pendente",
+        "pontuacao1": 0,
+        "pontuacao2": 0,
+        "inicio": 1758812666.6828566,
         "fim": null
       }
     ]

@@ -129,3 +129,25 @@ function mostrarMensagem(msg, tipo) {
   document.querySelector('.competicao-container').prepend(div);
   setTimeout(() => div.remove(), 3000);
 }
+
+function aceitarDesafio(id) {
+  fetch('/competicao/aceitar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ comp_id: id })
+  }).then(r => r.json()).then(data => {
+    mostrarMensagem(data.msg || 'Competição aceita!', 'success');
+    atualizarDesafios();
+  }).catch(() => mostrarMensagem('Erro ao aceitar.', 'danger'));
+}
+
+function recusarDesafio(id) {
+  fetch('/competicao/recusar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ comp_id: id })
+  }).then(r => r.json()).then(data => {
+    mostrarMensagem(data.msg || 'Desafio recusado!', 'info');
+    atualizarDesafios();
+  }).catch(() => mostrarMensagem('Erro ao recusar.', 'danger'));
+}
