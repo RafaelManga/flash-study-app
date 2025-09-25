@@ -46,12 +46,21 @@ def datetime_filter(value, format='%d/%m/%Y %H:%M'):
         except Exception:
             return ''
 app.jinja_env.filters['datetime'] = datetime_filter
+
+def ensure_user_defaults(user: dict):
+    if not isinstance(user, dict):
+        return user
+    user.setdefault('badges', [])
+    user.setdefault('conquistas', [])
+    user.setdefault('stats', {})
+    return user
+ACHIEVEMENTS_MAP = { cfg['name']: { 'desc': cfg['desc'], 'category': cfg['category'], 'difficulty': cfg['difficulty'] } for cfg in ACHIEVEMENTS.values() }
 app.secret_key = os.environ.get("SECRET_KEY", "flashstudy_secret_key_2024")
 bcrypt = Bcrypt(app)
 
 # Import e registro do blueprint do feed social
 from feed import feed_bp
-from achievements import increment_stat, award_if_eligible
+from achievements import increment_stat, award_if_eligible, ACHIEVEMENTS
 app.register_blueprint(feed_bp)
 def adicionar_conquista(user_id, conquista):
     if user_id in usuarios:
@@ -73,33 +82,6 @@ def adicionar_badge(user_id, badge):
 # --- Rotas de competição (após definição do app e dados) ---
 # ...existing code...
 
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-FlashStudy - Plataforma de Flashcards com IA
-Versão: 2.0
-Autor: FlashStudy Team
-"""
-
-import os
-import json
-import time
-import random
-import string
-from datetime import datetime
-from uuid import uuid4
-from functools import wraps
-
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, g
-from flask_bcrypt import Bcrypt
-import google.generativeai as genai
-
-
-# --- Configuração da Aplicação ---
-app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "flashstudy_secret_key_2024")
-bcrypt = Bcrypt(app)
 
 # --- Configuração da IA (Google Gemini) ---
 gemini_key = os.environ.get("GEMINI_API_KEY", "SUA_CHAVE_GEMINI_AQUI")
@@ -364,7 +346,7 @@ def inject_user():
     user_data = None
     notificacoes = 0
     if "user_id" in session and session["user_id"] in usuarios:
-        user_data = usuarios[session["user_id"]]
+        user_data = ensure_user_defaults(usuarios[session["user_id"]])
         notificacoes = contar_notificacoes(session["user_id"])
 
     return {
@@ -548,6 +530,25 @@ def home():
     return render_template("index.html",
                            baralhos=user_baralhos,
                            baralhos_compartilhados=baralhos_compartilhados)
+
+@app.route('/insights')
+@login_required
+def insights():
+    # Coleta dados simples para gráficos
+    stats = g.user.get('stats', {})
+    history = stats.get('study_history', [])
+    error_patterns = stats.get('error_patterns', {})
+    # Heatmap por hora do dia
+    heat = [0]*24
+    for item in history:
+        try:
+            ts = int(item.get('ts', 0))
+            from datetime import datetime
+            hour = datetime.fromtimestamp(ts).hour
+            heat[hour] += 1
+        except Exception:
+            pass
+    return render_template('insights.html', heat=heat, error_patterns=error_patterns)
 
 @app.route("/meus_baralhos")
 @login_required
@@ -741,12 +742,26 @@ def perfil_amigo(friend_id):
         flash("Você só pode ver o perfil de seus amigos.", "warning")
         return redirect(url_for("amigos"))
 
-    friend = usuarios.get(friend_id)
+    friend = ensure_user_defaults(usuarios.get(friend_id))
     if not friend:
         flash("Usuário não encontrado.", "danger")
         return redirect(url_for("amigos"))
-
-    return render_template("perfil_amigo.html", amigo=friend)
+    # Estatísticas derivadas
+    stats = friend.get('stats', {})
+    cards_created = stats.get('cards_created', 0)
+    desafios_vencidos = stats.get('challenges_won', 0)
+    mensagens_enviadas = stats.get('messages_sent', 0)
+    # Histórico de atividades do amigo
+    try:
+        from feed import atividades_do_usuario
+        historico = atividades_do_usuario(friend_id)[:20]
+    except Exception:
+        historico = []
+    return render_template("perfil_amigo.html", amigo=friend, stats={
+        'cards_created': cards_created,
+        'challenges_won': desafios_vencidos,
+        'messages_sent': mensagens_enviadas
+    }, historico=historico)
 
 
 # --- Sistema de Compartilhamento ---
@@ -1427,6 +1442,25 @@ def responder_desafio():
     except Exception:
         pass
 
+    # Log leve de estatísticas do estudo
+    try:
+        stats = g.user.setdefault('stats', {})
+        # Histórico de respostas
+        h = stats.setdefault('study_history', [])
+        h.append({
+            'ts': agora_timestamp(),
+            'card_id': card_id,
+            'acertou': bool(acertou)
+        })
+        # Padrões de erro simples por tamanho de resposta
+        if not acertou:
+            patt = stats.setdefault('error_patterns', {})
+            key = str(min(50, max(1, len(resposta_user))))
+            patt[key] = patt.get(key, 0) + 1
+        salvar_dados(USERS_PATH, usuarios)
+    except Exception:
+        pass
+
     return jsonify({
         "acertou": acertou,
         "resposta_correta": card_atual["verso"]
@@ -1539,11 +1573,15 @@ def perfil():
             return datetime.fromtimestamp(timestamp).strftime("%d/%m/%Y")
         except:
             return "Data inválida"
+    # Injeta mapa de conquistas após import disponível
+    from achievements import ACHIEVEMENTS as _ACH
+    ACHIEVEMENTS_MAP = { cfg['name']: { 'desc': cfg['desc'], 'category': cfg['category'], 'difficulty': cfg['difficulty'] } for cfg in _ACH.values() }
     return render_template(
         "perfil.html",
         baralhos=user_baralhos,
         usuario=g.user,
-        data_formatada=data_formatada
+        data_formatada=data_formatada,
+        ACHIEVEMENTS_MAP=ACHIEVEMENTS_MAP
     )
 
 
@@ -1642,6 +1680,56 @@ def datetime_filter(value, format='%d/%m/%Y %H:%M'):
         except Exception:
             return ''
 app.jinja_env.filters['datetime'] = datetime_filter
+
+# --- API: Flags de estudo (favoritos / difíceis) ---
+@app.route('/api/card/favorite', methods=['POST'])
+@login_required
+def api_card_favorite():
+    try:
+        data = request.get_json(force=True)
+        baralho_id = data.get('baralho_id')
+        card_id = data.get('card_id')
+        active = bool(data.get('active'))
+        if not card_id:
+            return jsonify({"success": False, "error": "card_id obrigatório"}), 400
+        favs = g.user.setdefault('favorites', [])
+        if active:
+            if card_id not in favs:
+                favs.append(card_id)
+        else:
+            if card_id in favs:
+                favs.remove(card_id)
+        salvar_dados(USERS_PATH, usuarios)
+        try:
+            from feed import registrar_atividade
+            registrar_atividade('conquista', g.user['id'], f"Atualizou favoritos de estudo")
+        except Exception:
+            pass
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/card/hard', methods=['POST'])
+@login_required
+def api_card_hard():
+    try:
+        data = request.get_json(force=True)
+        baralho_id = data.get('baralho_id')
+        card_id = data.get('card_id')
+        active = bool(data.get('active'))
+        if not card_id:
+            return jsonify({"success": False, "error": "card_id obrigatório"}), 400
+        hards = g.user.setdefault('hard_cards', [])
+        if active:
+            if card_id not in hards:
+                hards.append(card_id)
+        else:
+            if card_id in hards:
+                hards.remove(card_id)
+        salvar_dados(USERS_PATH, usuarios)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == "__main__":
     print("🚀 FlashStudy iniciando...")

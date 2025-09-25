@@ -25,6 +25,7 @@
                 {% endif %}
             </a>
             <a href="{{ url_for('pagina_competicao') }}" class="nav-item">🏆 Competições</a>
+            <a href="{{ url_for('insights') }}" class="nav-item">📊 Insights</a>
             <a href="{{ url_for('perfil') }}" class="nav-item">👤 Perfil</a>
 
             <button class="theme-toggle" onclick="alternarTema()">
@@ -50,6 +51,7 @@
         {% block content %}{% endblock %}
     </div>
 
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script>
         // Alternância de tema
         async function alternarTema() {

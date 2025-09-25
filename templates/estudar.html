@@ -2,7 +2,7 @@
 {% block title %}Estudar {{ baralho.nome }} - FlashStudy{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 800px; margin: 0 auto;">
+<div class="card" style="max-width: 800px; margin: 0 auto;" data-baralho-id="{{ baralho_id }}">
     <div style="text-align: center; margin-bottom: 32px;">
         <h2 style="font-size: 2.2rem; margin-bottom: 12px;">
             📚 Estudando: {{ baralho.nome }}
@@ -13,15 +13,57 @@
                 <br>Este é um baralho compartilhado.
             {% endif %}
         </p>
+        <div id="progresso" style="margin-top:8px; font-weight:600; color: var(--text);">
+            Progresso: <span id="progresso-atual">0</span> de <span id="progresso-total">{{ baralho.cards|length }}</span>
+        </div>
     </div>
 
     {% if baralho.cards %}
+    <div class="card" style="margin-bottom:16px; display:flex; gap:12px; align-items:center; justify-content:center; flex-wrap:wrap;">
+        <strong>Mostrar:</strong>
+        <label class="chip-amigo" style="cursor:pointer;">
+            <input type="radio" name="filtro_cards" value="all" checked style="display:none" onchange="aplicarFiltro('all')"> Todos
+        </label>
+        <label class="chip-amigo" style="cursor:pointer;">
+            <input type="radio" name="filtro_cards" value="fav" style="display:none" onchange="aplicarFiltro('fav')"> Favoritos
+        </label>
+        <label class="chip-amigo" style="cursor:pointer;">
+            <input type="radio" name="filtro_cards" value="hard" style="display:none" onchange="aplicarFiltro('hard')"> Difíceis
+        </label>
+        <span style="width:1px;height:24px;background:var(--border);"></span>
+        <label class="chip-amigo" style="cursor:pointer;">
+            <input type="checkbox" id="modo-sequencial" style="display:none" onchange="toggleSequencial(this.checked)"> Modo Sequencial
+        </label>
+        <div style="flex: 1 1 100%; height:0;"></div>
+        <div id="nav-seq" style="display:flex; gap:8px;">
+            <button class="btn tiny ghost" onclick="navAnterior()">◀️ Anterior</button>
+            <button class="btn tiny" onclick="navProximo()">Próximo ▶️</button>
+        </div>
+        <div id="barra-progresso" style="flex-basis:100%;height:8px;background:var(--border);border-radius:999px;overflow:hidden;margin-top:8px;">
+            <div id="barra-progresso-fill" style="height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--purple));transition:width .3s ease;"></div>
+        </div>
+    </div>
     <div class="grid-cards">
         {% for card in baralho.cards %}
-        <div class="flip-card" id="card-{{ card.id }}" onclick="flipCard('card-{{ card.id }}')" role="button" tabindex="0" aria-pressed="false" aria-label="Virar card">
+        <div class="flip-card" id="card-{{ card.id }}" onclick="flipCard('card-{{ card.id }}')" role="button" tabindex="0" aria-pressed="false" aria-label="Virar card" data-card-id="{{ card.id }}"
+             data-is-fav="{{ '1' if (usuario.favorites and (card.id in usuario.favorites)) else '0' }}"
+             data-is-hard="{{ '1' if (usuario.hard_cards and (card.id in usuario.hard_cards)) else '0' }}">
             <div class="flip-card-inner">
                 <div class="flip-card-front">
+                    <div class="flip-actions">
+                        <button class="icon-btn fav{% if usuario.favorites and (card.id in usuario.favorites) %} active{% endif %}"
+                                title="Favoritar"
+                                onclick="event.stopPropagation(); toggleFavorite('{{ card.id }}', this)"
+                                aria-label="Favoritar">★</button>
+                        <button class="icon-btn hard{% if usuario.hard_cards and (card.id in usuario.hard_cards) %} active{% endif %}"
+                                title="Marcar como difícil"
+                                onclick="event.stopPropagation(); toggleHard('{{ card.id }}', this)"
+                                aria-label="Marcar como difícil">⚠️</button>
+                    </div>
                     <div class="q">{{ card.frente }}</div>
+                    <div class="card-footer">
+                        <span style="color: var(--muted); font-size: 0.9rem;">Clique para ver a resposta</span>
+                    </div>
                 </div>
                 <div class="flip-card-back">
                     <div class="back-content">{{ card.verso }}</div>

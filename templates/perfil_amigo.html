@@ -19,6 +19,23 @@
                 <button class="btn tiny" style="margin-left:8px; padding:2px 8px; font-size:0.9em;" onclick="copiarTexto('{{ amigo.id }}', event)">Copiar</button>
             </p>
             <p style="color: var(--muted); margin-bottom: 8px;">Pontos: {{ amigo.points or 0 }}</p>
+            {% if amigo.bio %}
+            <p style="color: var(--text); margin-bottom: 8px;">{{ amigo.bio }}</p>
+            {% endif %}
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:12px 0;">
+                <div class="card" style="padding:12px;text-align:center;">
+                    <div style="font-weight:700;">Cards Criados</div>
+                    <div style="font-size:1.2rem;">{{ (stats.cards_created or 0) if stats else 0 }}</div>
+                </div>
+                <div class="card" style="padding:12px;text-align:center;">
+                    <div style="font-weight:700;">Desafios Vencidos</div>
+                    <div style="font-size:1.2rem;">{{ (stats.challenges_won or 0) if stats else 0 }}</div>
+                </div>
+                <div class="card" style="padding:12px;text-align:center;">
+                    <div style="font-weight:700;">Mensagens Enviadas</div>
+                    <div style="font-size:1.2rem;">{{ (stats.messages_sent or 0) if stats else 0 }}</div>
+                </div>
+            </div>
             {% if amigo.frase_pessoal %}
                 <p style="color: var(--text); font-style: italic; margin-top: 16px; padding: 12px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border);">
                     "{{ amigo.frase_pessoal }}"
@@ -28,15 +45,15 @@
                 <p style="color: var(--muted); margin-bottom: 8px;">Data de nascimento: {{ amigo.data_nascimento }}</p>
             {% endif %}
             <div style="margin-top: 16px;">
-                <strong>Conquistas:</strong>
+                <strong>Conquistas & Badges</strong>
                 <div class="badges-list" style="margin-top:8px;">
                     {% set tem = (amigo.badges and amigo.badges|length>0) or (amigo.conquistas and amigo.conquistas|length>0) %}
                     {% if tem %}
-                        {% for badge in amigo.badges or [] %}
-                            <span class="badge-chip">🏅 {{ badge }}</span>
+                        {% for badge in (amigo.badges or []) %}
+                            <span class="badge-chip" title="Badge">🏅 {{ badge }}</span>
                         {% endfor %}
-                        {% for conquista in amigo.conquistas or [] %}
-                            <span class="conquista-chip">🏆 {{ conquista }}</span>
+                        {% for conquista in (amigo.conquistas or []) %}
+                            <span class="conquista-chip" title="Conquista">🏆 {{ conquista }}</span>
                         {% endfor %}
                     {% else %}
                         <span style="color:#888">Nenhuma conquista ainda.</span>
@@ -46,13 +63,30 @@
         </div>
     </div>
 
-    <div class="form-actions" style="justify-content: center; border-top: 1px solid var(--border); padding-top: 24px;">
+    <div class="form-actions" style="justify-content: center; border-top: 1px solid var(--border); padding-top: 24px; gap:12px; flex-wrap:wrap;">
         <a href="{{ url_for('amigos') }}" class="btn ghost">
             ← Voltar para Amigos
         </a>
+        <a href="{{ url_for('feed.feed') }}" class="btn" onclick="event.preventDefault(); abrirDM('{{ amigo.id }}')">✉️ Enviar Mensagem</a>
         <form action="{{ url_for('remover_amigo', friend_id=amigo.id) }}" method="post" onsubmit="return confirm('Tem certeza que deseja remover {{ amigo.nome }} como amigo?');" style="display: inline;">
             <button type="submit" class="btn danger">Remover Amigo</button>
         </form>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+        <h3 style="margin-bottom:8px;">Histórico recente</h3>
+        {% if historico and historico|length>0 %}
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;">
+            {% for a in historico %}
+            <li style="display:flex;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
+                <span>{{ a.descricao }}</span>
+                <span style="color:var(--muted);">{{ a.data|datetime }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div style="color:#888;">Sem atividades recentes.</div>
+        {% endif %}
     </div>
 </div>
 
@@ -101,5 +135,10 @@ document.addEventListener("DOMContentLoaded", function() {
         card.style.transform = 'translateY(0)';
     }, 100);
 });
+
+function abrirDM(id){
+    // Redireciona para o feed e pré-seleciona o amigo via hash
+    window.location.href = "{{ url_for('feed.feed') }}#dm=" + encodeURIComponent(id);
+}
 </script>
 {% endblock %}

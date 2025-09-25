@@ -24,5 +24,53 @@
       "USRSZD0XV8"
     ],
     "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758821456.9048114,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758821463.7408726,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "amizade",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Você enviou um pedido de amizade para Grey",
+    "data": 1758822110.1340191,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "amizade",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Você adicionou Rafael como amigo",
+    "data": 1758822130.2421339,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "amizade",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Você adicionou Grey como amigo",
+    "data": 1758822130.2556489,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Desbloqueou a conquista 🤝 Primeiro Amigo – Adicionou seu primeiro amigo",
+    "data": 1758822130.2780914,
+    "likes": [],
+    "comentarios": []
   }
 ]

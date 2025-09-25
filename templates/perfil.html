@@ -81,6 +81,22 @@ function copiarTexto(texto, event) {
 
 <div class="profile-grid">
     <div class="card">
+        <h3>🏆 Conquistas & Badges</h3>
+        <div class="badges-list" style="margin-top:8px; flex-wrap:wrap; gap:8px;">
+            {% set tem = (usuario.badges and usuario.badges|length>0) or (usuario.conquistas and usuario.conquistas|length>0) %}
+            {% if tem %}
+                {% for badge in (usuario.badges or []) %}
+                    <span class="badge-chip" title="Badge">🏅 {{ badge }}</span>
+                {% endfor %}
+                {% for conquista in (usuario.conquistas or []) %}
+                    <span class="conquista-chip" title="Conquista">🏆 {{ conquista }}</span>
+                {% endfor %}
+            {% else %}
+                <span style="color:#888">Nenhuma conquista ou badge ainda. Complete missões e desafios para ganhar!</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card">
         <h3>✏️ Editar Perfil</h3>
         <form method="post" enctype="multipart/form-data" class="form">
             <div class="form-group">
@@ -172,5 +188,33 @@ function copiarTexto(texto, event) {
             {% endif %}
         </div>
     </div>
+    <div class="card">
+        <h3>🏅 Conquistas Detalhadas</h3>
+        <div id="ach-list" style="display:grid; gap:8px;">
+            {% set all = (usuario.conquistas or []) %}
+            {% if all and all|length>0 %}
+                {% for name in all %}
+                    <div class="friend-request" onclick="abrirConquista('{{ name }}')" style="cursor:pointer;">
+                        <strong>{{ name }}</strong>
+                        <div style="color:var(--muted)">Clique para ver detalhes</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div style="color:#888">Nenhuma conquista ainda.</div>
+            {% endif %}
+        </div>
+    </div>
 </div>
+<script>
+function abrirConquista(name){
+  const detail = {{ ACHIEVEMENTS_MAP | tojson | safe }};
+  const data = detail[name] || { desc: 'Sem descrição', category: 'Geral', difficulty: '—' };
+  const c = document.querySelector('.container');
+  const div = document.createElement('div');
+  div.className = 'card glass-effect';
+  div.style.position='fixed'; div.style.left='50%'; div.style.top='20%'; div.style.transform='translateX(-50%)'; div.style.zIndex='9999'; div.style.maxWidth='520px';
+  div.innerHTML = `<h3 style="margin-bottom:8px;">${name}</h3><div style="color:var(--muted)">${data.desc}</div><div style=\"margin-top:8px;\">Categoria: <strong>${data.category}</strong> • Dificuldade: <strong>${data.difficulty}</strong></div><div class=\"form-actions\" style=\"justify-content:flex-end;margin-top:12px;\"><button class=\"btn ghost\" onclick=\"this.closest('div.card').remove()\">Fechar</button></div>`;
+  c.appendChild(div);
+}
+</script>
 {% endblock %}

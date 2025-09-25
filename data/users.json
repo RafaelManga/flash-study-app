@@ -6,17 +6,25 @@
     "senha": "$2b$12$BIiWpNvYS2gcqK1qkgarUOYgDndqFQeXJzyL1JaF6.49PrHe3F/PK",
     "avatar": "",
     "points": 30,
-    "last_seen": 1758815671,
-    "friends": [],
+    "last_seen": 1758822018,
+    "friends": [
+      "USRWRPWIHU"
+    ],
     "ultimo_uso_ia": 0,
     "data_criacao": 1758240753,
     "data_nascimento": "",
     "frase_pessoal": "",
     "tema": "dark",
-    "prev_seen": 1758815611,
+    "prev_seen": 1758822018,
     "badges": [],
     "conquistas": [],
-    "stats": {}
+    "stats": {
+      "deck_review_counts": {
+        "matematica_fbbc": 3
+      }
+    },
+    "hard_cards": [],
+    "favorites": []
   },
   "USRWRPWIHU": {
     "id": "USRWRPWIHU",
@@ -25,8 +33,10 @@
     "senha": "$2b$12$R6WcmCPZnFnl5UMLd255p.M71zY3S4L6xAp9M9vthM04s4oFrmUpW",
     "avatar": "",
     "points": 0,
-    "last_seen": 1758241000,
-    "friends": [],
+    "last_seen": 1758822123,
+    "friends": [
+      "USRSZD0XV8"
+    ],
     "ultimo_uso_ia": 0,
     "data_criacao": 1758240849,
     "data_nascimento": "",
@@ -77,6 +87,13 @@
         "inicio": 1758812666.6828566,
         "fim": null
       }
-    ]
+    ],
+    "badges": [],
+    "conquistas": [
+      "🤝 Primeiro Amigo"
+    ],
+    "stats": {
+      "friends_added": 1
+    }
   }
 }

@@ -2,96 +2,73 @@
 {% block title %}Início - FlashStudy{% endblock %}
 
 {% block content %}
-<div style="text-align: center; margin-bottom: 40px;">
-    <h1 style="font-size: 2.5rem; margin-bottom: 16px;">
-        Bem-vindo ao FlashStudy, {{ usuario.nome }}! 🎉
-    </h1>
-    <p style="color: var(--muted); font-size: 1.2rem; line-height: 1.6;">
-        Sua plataforma inteligente para estudos com flashcards e IA
-    </p>
+<div class="card gradient-purple" style="padding: 40px; margin-bottom: 32px; color: #fff; border: 0;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap: 24px; flex-wrap: wrap;">
+        <div>
+            <h1 style="font-size: 2.2rem; margin-bottom: 6px;">Bem-vindo, {{ usuario.nome }} 👋</h1>
+            <p style="opacity:.9">Sua central para criar, estudar e compartilhar flashcards.</p>
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap: wrap;">
+            <a href="{{ url_for('criar_card') }}" class="btn" style="background:rgba(0,0,0,.2); border:1px solid #ffffff33;">➕ Criar Card</a>
+            <a href="{{ url_for('gerar_ia') }}" class="btn" style="background:rgba(0,0,0,.2); border:1px solid #ffffff33;">🤖 Gerar com IA</a>
+            <a href="{{ url_for('desafio') }}" class="btn" style="background:rgba(0,0,0,.2); border:1px solid #ffffff33;">🎯 Desafio</a>
+        </div>
+    </div>
+    <div style="margin-top:16px; opacity:.9; font-size:.95rem;">Dica: ative o modo {{ 'claro' if usuario.tema=='dark' else 'escuro' }} no topo.</div>
+    <div style="position:absolute; inset:0; background: radial-gradient(600px 200px at 90% -10%, rgba(255,255,255,.25), transparent 40%);"></div>
+    <div style="position:absolute; right:-40px; bottom:-40px; font-size:120px; opacity:.15">🧠</div>
+    <div style="position:absolute; left:-20px; top:-20px; font-size:90px; opacity:.15">⚡</div>
+    <div style="position:absolute; right:20%; top:10%; font-size:40px; opacity:.2">✨</div>
+    <div style="position:absolute; left:15%; bottom:10%; font-size:36px; opacity:.2">🎓</div>
+    <div style="position:relative"></div>
+    <style>
+      .home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-top:20px}
+      .home-card{position:relative;overflow:hidden}
+      .home-card .icon{font-size:40px;margin-bottom:8px;transition:transform .3s ease}
+      .home-card:hover .icon{transform:translateY(-4px)}
+    </style>
 </div>
 
-
-
-
-<!-- Navegação Rápida -->
-<nav style="display: flex; gap: 16px; margin-bottom: 18px; justify-content: flex-end;">
-    <!-- Navegação inferior removida em favor do novo bloco "Meus Baralhos e Compartilhados" -->
-</nav>
-<!-- Ações Rápidas e Navegação de Baralhos -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px;">
-    <a href="{{ url_for('criar_card') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
-        <div style="text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 16px;">➕</div>
-            <h3 style="margin-bottom: 8px;">Criar Card</h3>
-            <p style="color: var(--muted); font-size: 0.9rem;">
-                Adicione novos flashcards aos seus baralhos
-            </p>
-        </div>
+<div class="home-grid">
+    <a href="{{ url_for('criar_card') }}" class="card home-card hover-lift" style="text-decoration:none;color:inherit;">
+        <div class="icon">➕</div>
+        <h3 style="margin-bottom:6px;">Criar Card</h3>
+        <p style="color:var(--muted);">Adicione novos flashcards aos seus baralhos</p>
     </a>
-    <a href="{{ url_for('gerar_ia') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
-        <div style="text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 16px;">🤖</div>
-            <h3 style="margin-bottom: 8px;">Gerar com IA</h3>
-            <p style="color: var(--muted); font-size: 0.9rem;">
-                Use inteligência artificial para criar cards
-            </p>
-        </div>
+    <a href="{{ url_for('gerar_ia') }}" class="card home-card hover-lift" style="text-decoration:none;color:inherit;">
+        <div class="icon">🤖</div>
+        <h3 style="margin-bottom:6px;">Gerar com IA</h3>
+        <p style="color:var(--muted);">Use IA para criar cards rapidamente</p>
     </a>
-    <a href="{{ url_for('desafio') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
-        <div style="text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 16px;">🎯</div>
-            <h3 style="margin-bottom: 8px;">Modo Desafio</h3>
-            <p style="color: var(--muted); font-size: 0.9rem;">
-                Teste seus conhecimentos com quiz
-            </p>
-        </div>
+    <a href="{{ url_for('desafio') }}" class="card home-card hover-lift" style="text-decoration:none;color:inherit;">
+        <div class="icon">🎯</div>
+        <h3 style="margin-bottom:6px;">Modo Desafio</h3>
+        <p style="color:var(--muted);">Teste seus conhecimentos com quiz</p>
     </a>
-    <a href="{{ url_for('amigos') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
-        <div style="text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 16px;">👥</div>
-            <h3 style="margin-bottom: 8px;">Sistema Social</h3>
-            <p style="color: var(--muted); font-size: 0.9rem;">
-                Conecte-se e compartilhe baralhos
-            </p>
-        </div>
+    <a href="{{ url_for('amigos') }}" class="card home-card hover-lift" style="text-decoration:none;color:inherit;">
+        <div class="icon">👥</div>
+        <h3 style="margin-bottom:6px;">Amigos</h3>
+        <p style="color:var(--muted);">Conecte-se e compartilhe baralhos</p>
     </a>
-    <a href="{{ url_for('feed.feed') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
-        <div style="text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 16px;">📰</div>
-            <h3 style="margin-bottom: 8px;">Feed Social</h3>
-            <p style="color: var(--muted); font-size: 0.9rem;">
-                Veja atividades, conquistas e comentários dos amigos
-            </p>
-        </div>
+    <a href="{{ url_for('feed.feed') }}" class="card home-card hover-lift" style="text-decoration:none;color:inherit;">
+        <div class="icon">📰</div>
+        <h3 style="margin-bottom:6px;">Feed Social</h3>
+        <p style="color:var(--muted);">Atividades, conquistas e comentários</p>
     </a>
-    <a href="{{ url_for('listar_baralhos') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
-        <div style="text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 16px;">📚</div>
-            <h3 style="margin-bottom: 8px;">Meus Baralhos e Compartilhados</h3>
-            <p style="color: var(--muted); font-size: 0.9rem;">
-                Acesse todos os seus baralhos e os que compartilham com você
-            </p>
-        </div>
+    <a href="{{ url_for('listar_baralhos') }}" class="card home-card hover-lift" style="text-decoration:none;color:inherit;">
+        <div class="icon">📚</div>
+        <h3 style="margin-bottom:6px;">Meus Baralhos</h3>
+        <p style="color:var(--muted);">Acesse seus baralhos e compartilhados</p>
     </a>
 </div>
-
 
 <script>
-// Animação de entrada
-document.addEventListener('DOMContentLoaded', function() {
-    const cards = document.querySelectorAll('.card, .baralho-card');
-    cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        setTimeout(() => {
-            card.style.transition = 'all 0.6s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 100);
-    });
+document.addEventListener('DOMContentLoaded', function(){
+  const cards = document.querySelectorAll('.home-card');
+  cards.forEach((c,i)=>{
+    c.style.opacity='0'; c.style.transform='translateY(24px)';
+    setTimeout(()=>{ c.style.transition='all .6s ease'; c.style.opacity='1'; c.style.transform='translateY(0)'; }, 80*i);
+  });
 });
 </script>
-
-<!-- Seção inferior removida: agora acessível pelo bloco "Meus Baralhos e Compartilhados" acima -->
 {% endblock %}

@@ -2,29 +2,33 @@
 {% block title %}Login - FlashStudy{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 480px; margin: 60px auto;">
+<div style="min-height: calc(100vh - 140px); display:flex; align-items:center; justify-content:center; position:relative;">
+  <div style="position:absolute; inset:0; background: radial-gradient(800px 300px at 80% -10%, rgba(59,130,246,.25), transparent 40%), radial-gradient(600px 240px at 10% 110%, rgba(139,92,246,.20), transparent 40%);"></div>
+  <div class="card" style="max-width: 480px; width:100%; margin: 40px auto; position:relative;">
     <div style="text-align: center; margin-bottom: 32px;">
-        <h1 style="font-size: 2.5rem; margin-bottom: 12px;">🧠 FlashStudy</h1>
+        <h1 style="font-size: 2.2rem; margin-bottom: 12px;" class="text-gradient">🧠 FlashStudy</h1>
         <p style="color: var(--muted); font-size: 1.1rem;">
             Entre na sua conta para continuar estudando
         </p>
     </div>
 
-    <form method="post" class="form">
+    <form method="post" class="form" onsubmit="return loginLoading(this)">
         <div class="form-group">
             <label for="email">📧 Email</label>
-            <input type="email" id="email" name="email" required
+            <input type="email" id="email" name="email" required onfocus="this.parentElement.style.transform='translateY(-2px)'" onblur="this.parentElement.style.transform=''"
                    placeholder="seu@email.com" autocomplete="email">
+            <div id="email-feedback" style="min-height:18px; font-size:.85rem;"></div>
         </div>
 
         <div class="form-group">
             <label for="senha">🔒 Senha</label>
-            <input type="password" id="senha" name="senha" required
+            <input type="password" id="senha" name="senha" required onfocus="this.parentElement.style.transform='translateY(-2px)'" onblur="this.parentElement.style.transform=''"
                    placeholder="Sua senha" autocomplete="current-password">
+            <div id="senha-feedback" style="min-height:18px; font-size:.85rem;"></div>
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem;">
+            <button id="btn-login" type="submit" class="btn" style="width: 100%; font-size: 1.05rem;">
                 🚀 Entrar
             </button>
         </div>
@@ -43,6 +47,7 @@
             🔑 Esqueci a Senha
         </a>
     </div>
+  </div>
 </div>
 
 <!-- Card de Recursos -->
@@ -81,19 +86,22 @@
 </div>
 
 <script>
-// Animação de entrada
 document.addEventListener('DOMContentLoaded', function() {
-    const cards = document.querySelectorAll('.card');
-    cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-
-        setTimeout(() => {
-            card.style.transition = 'all 0.6s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 200);
-    });
+  const card = document.querySelector('.card');
+  if(card){
+    card.style.opacity='0'; card.style.transform='translateY(24px)';
+    setTimeout(()=>{ card.style.transition='all .6s ease'; card.style.opacity='1'; card.style.transform='translateY(0)'; }, 100);
+  }
 });
+function loginLoading(form){
+  const btn = document.getElementById('btn-login');
+  if(btn){
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.dataset.original = original;
+    btn.textContent = 'Carregando...';
+  }
+  return true;
+}
 </script>
 {% endblock %}

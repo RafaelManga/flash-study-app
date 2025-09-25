@@ -3,7 +3,7 @@
 
 {% block content %}
 <div id="desafio-container" style="max-width: 800px; margin: 0 auto;">
-    <div class="card">
+    <div class="card" id="card-desafio">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
             <h2>🎯 Desafio em Andamento</h2>
             <div style="display: flex; gap: 16px; align-items: center;">
@@ -52,6 +52,7 @@
                 Próxima Questão
             </button>
         </div>
+        <div id="reacoes" style="pointer-events:none; position:relative; height:0;"></div>
     </div>
 </div>
 
@@ -64,6 +65,7 @@ let erros = 0;
 let timer;
 let tempoRestante;
 let respostasUsuario = [];
+let combo = 0;
 
 function iniciarDesafio() {
     mostrarQuestao();
@@ -163,15 +165,18 @@ function mostrarResultado(data, timeout) {
         feedbackElement.textContent = '⏰ Tempo Esgotado!';
         feedbackElement.style.color = 'var(--warning)';
         erros++;
+        combo = 0; reacaoEmoji('⏰');
     } else if (data.acertou) {
         feedbackElement.textContent = '✅ Correto!';
         feedbackElement.style.color = 'var(--success)';
         pontos += 10;
-        acertos++;
+        acertos++; combo++; reacaoEmoji('🎉');
+        if (combo === 3) miniConquista('🔥 Combo de 3 acertos!');
+        if (combo === 5) miniConquista('⚡ Combo de 5 acertos!');
     } else {
         feedbackElement.textContent = '❌ Incorreto';
         feedbackElement.style.color = 'var(--danger)';
-        erros++;
+        erros++; combo = 0; reacaoEmoji('😵');
     }
 
     respostaCorretaElement.textContent = `Resposta correta: ${data.resposta_correta}`;
@@ -228,5 +233,42 @@ document.getElementById('resposta-input').addEventListener('keypress', function(
 
 // Inicia o desafio quando a página carrega
 document.addEventListener('DOMContentLoaded', iniciarDesafio);
+
+// --- Reações visuais ---
+function reacaoEmoji(symbol){
+    const host = document.getElementById('card-desafio');
+    if(!host) return;
+    for(let i=0;i<6;i++){
+        const span = document.createElement('span');
+        span.textContent = symbol;
+        span.style.position='absolute';
+        span.style.left = (20 + Math.random()*60) + '%';
+        span.style.top = '40%';
+        span.style.fontSize = (18 + Math.random()*16) + 'px';
+        span.style.transform = 'translate(-50%, -50%)';
+        span.style.opacity = '0';
+        span.style.transition = 'all .9s ease';
+        host.appendChild(span);
+        requestAnimationFrame(()=>{
+            span.style.top = (5 + Math.random()*20) + '%';
+            span.style.opacity = '1';
+        });
+        setTimeout(()=>{
+            span.style.opacity='0'; span.style.transform='translate(-50%, -80%)';
+            setTimeout(()=> span.remove(), 400);
+        }, 700);
+    }
+}
+function miniConquista(text){
+    const c = document.querySelector('.container');
+    if(!c) return;
+    const div = document.createElement('div');
+    div.className = 'flash flash-success';
+    div.textContent = text;
+    div.style.position='fixed'; div.style.right='24px'; div.style.bottom='24px';
+    div.style.zIndex='9999';
+    c.appendChild(div);
+    setTimeout(()=>{ div.style.opacity='0'; div.style.transform='translateY(20px)'; setTimeout(()=>div.remove(), 300); }, 2200);
+}
 </script>
 {% endblock %}

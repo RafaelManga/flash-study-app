@@ -192,4 +192,12 @@ def dm_send():
         pass
     return jsonify({'msg': 'Enviado!'})
 
+
+# --- Consulta auxiliar para páginas ---
+def atividades_do_usuario(user_id):
+    """Retorna atividades (dict) de um usuário específico, mais recentes primeiro."""
+    itens = [a.to_dict() for a in atividades if a.usuario_id == user_id]
+    itens.sort(key=lambda x: x.get('data', 0), reverse=True)
+    return itens
+
 # Exemplo de uso: registrar_atividade('criou_baralho', 'USR123', 'Criou o baralho Matemática')

@@ -88,6 +88,16 @@ setInterval(pollFeed, 10000);
 
 const dmSelect = document.getElementById('dm-amigo');
 dmSelect && dmSelect.addEventListener('change', () => carregarDM());
+// Pré-seleciona amigo vindo do perfil (#dm=<id>)
+document.addEventListener('DOMContentLoaded', function(){
+  const hash = window.location.hash || '';
+  const m = hash.match(/#dm=([^&]+)/);
+  if (m && document.getElementById('dm-amigo')){
+    document.getElementById('dm-amigo').value = decodeURIComponent(m[1]);
+    carregarDM();
+    document.getElementById('dm-texto').focus();
+  }
+});
 
 function carregarDM() {
   const friend_id = document.getElementById('dm-amigo').value;

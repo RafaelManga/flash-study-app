@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Insights - FlashStudy{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 960px; margin: 0 auto;">
+  <h2 style="margin-bottom: 12px;">📊 Insights de Estudo</h2>
+  <p style="color: var(--muted); margin-bottom: 16px;">Veja seus horários mais ativos e padrões de erro.</p>
+
+  <div class="card" style="margin-bottom:16px;">
+    <h3 style="margin-bottom:8px;">Mapa de Calor por Hora</h3>
+    <div id="heatmap" style="display:grid; grid-template-columns: repeat(12, 1fr); gap:6px;"></div>
+    <small style="color:var(--muted)">Cada bloco representa uma hora do dia (0-23).</small>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:8px;">Padrões de Erro</h3>
+    <div id="errors" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+    <small style="color:var(--muted)">Distribuição por tamanho de resposta incorreta.</small>
+  </div>
+</div>
+
+<script>
+const heat = {{ heat | tojson | safe }};
+const errorPatterns = {{ error_patterns | tojson | safe }};
+
+function renderHeat(){
+  const el = document.getElementById('heatmap');
+  const maxv = Math.max(1, ...heat);
+  for(let h=0; h<24; h++){
+    const v = heat[h] || 0;
+    const cell = document.createElement('div');
+    cell.title = `${h}h: ${v}`;
+    const pct = Math.round((v / maxv) * 100);
+    cell.style.height='26px';
+    cell.style.borderRadius='8px';
+    cell.style.border='1px solid var(--border)';
+    cell.style.background = `linear-gradient(135deg, rgba(59,130,246,${0.15 + pct/200}), rgba(139,92,246,${0.1 + pct/200}))`;
+    cell.style.position='relative';
+    const label = document.createElement('span');
+    label.textContent = h;
+    label.style.position='absolute';
+    label.style.left='6px';
+    label.style.top='4px';
+    label.style.fontSize='0.75rem';
+    label.style.color='var(--muted)';
+    cell.appendChild(label);
+    el.appendChild(cell);
+  }
+}
+
+function renderErrors(){
+  const el = document.getElementById('errors');
+  const entries = Object.entries(errorPatterns).sort((a,b)=>Number(a[0])-Number(b[0]));
+  const maxv = Math.max(1, ...entries.map(e=>e[1]));
+  entries.forEach(([k,v])=>{
+    const chip = document.createElement('div');
+    chip.className='badge-chip';
+    chip.textContent = `len ${k}: ${v}`;
+    chip.style.background = `linear-gradient(90deg,#ef4444,#b91c1c)`;
+    chip.style.opacity = String(0.4 + (v/maxv)*0.6);
+    el.appendChild(chip);
+  });
+  if(entries.length === 0){
+    const empty = document.createElement('div');
+    empty.style.color='var(--muted)'; empty.textContent='Sem dados suficientes ainda.';
+    el.appendChild(empty);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  renderHeat();
+  renderErrors();
+});
+</script>
+{% endblock %}
+
+
