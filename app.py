@@ -54,14 +54,16 @@ def ensure_user_defaults(user: dict):
     user.setdefault('conquistas', [])
     user.setdefault('stats', {})
     return user
+
+# Importações necessárias (apenas uma vez, no topo do arquivo)
+from feed import feed_bp
+from achievements import increment_stat, award_if_eligible, ACHIEVEMENTS
+
 ACHIEVEMENTS_MAP = { cfg['name']: { 'desc': cfg['desc'], 'category': cfg['category'], 'difficulty': cfg['difficulty'] } for cfg in ACHIEVEMENTS.values() }
 app.secret_key = os.environ.get("SECRET_KEY", "flashstudy_secret_key_2024")
 bcrypt = Bcrypt(app)
-
-# Import e registro do blueprint do feed social
-from feed import feed_bp
-from achievements import increment_stat, award_if_eligible, ACHIEVEMENTS
 app.register_blueprint(feed_bp)
+
 def adicionar_conquista(user_id, conquista):
     if user_id in usuarios:
         user = usuarios[user_id]
@@ -102,10 +104,6 @@ try:
     model = genai.GenerativeModel("gemini-pro")
 except Exception as e:
     print(f"❌ Erro ao configurar Gemini API: {e}")
-
-# Import e registro do blueprint do feed social
-from feed import feed_bp
-app.register_blueprint(feed_bp)
 
 DATA_DIR = "data"
 # --- Constantes e Caminhos ---
@@ -757,11 +755,13 @@ def perfil_amigo(friend_id):
         historico = atividades_do_usuario(friend_id)[:20]
     except Exception:
         historico = []
+    from achievements import ACHIEVEMENTS as _ACH
+    ACHIEVEMENTS_MAP = { cfg['name']: { 'desc': cfg['desc'], 'category': cfg['category'], 'difficulty': cfg['difficulty'] } for cfg in _ACH.values() }
     return render_template("perfil_amigo.html", amigo=friend, stats={
         'cards_created': cards_created,
         'challenges_won': desafios_vencidos,
         'messages_sent': mensagens_enviadas
-    }, historico=historico)
+    }, historico=historico, ACHIEVEMENTS_MAP=ACHIEVEMENTS_MAP)
 
 
 # --- Sistema de Compartilhamento ---

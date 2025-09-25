@@ -46,14 +46,23 @@
             {% endif %}
             <div style="margin-top: 16px;">
                 <strong>Conquistas & Badges</strong>
-                <div class="badges-list" style="margin-top:8px;">
+                <div class="badges-list" style="margin-top:8px; flex-wrap:wrap; gap:8px;">
                     {% set tem = (amigo.badges and amigo.badges|length>0) or (amigo.conquistas and amigo.conquistas|length>0) %}
                     {% if tem %}
                         {% for badge in (amigo.badges or []) %}
-                            <span class="badge-chip" title="Badge">🏅 {{ badge }}</span>
+                            {% set badge_info = ACHIEVEMENTS_MAP.get(badge) %}
+                            <span class="badge-chip" title="{{ badge_info.desc if badge_info else '' }}">
+                                🏅 <strong>{{ badge }}</strong>
+                                {% if badge_info %}<br><small>{{ badge_info.desc }}</small>{% endif %}
+                            </span>
                         {% endfor %}
                         {% for conquista in (amigo.conquistas or []) %}
-                            <span class="conquista-chip" title="Conquista">🏆 {{ conquista }}</span>
+                            {% set c = ACHIEVEMENTS_MAP.get(conquista) %}
+                            <span class="conquista-chip" title="{{ c.desc if c else '' }}">
+                                🏆 <strong>{{ conquista }}</strong>
+                                {% if c %}<br><small>{{ c.desc }}</small>{% endif %}
+                                {% if c %}<br><span style="font-size:0.8em;color:var(--muted)">Categoria: {{ c.category }} • Dificuldade: {{ c.difficulty }}</span>{% endif %}
+                            </span>
                         {% endfor %}
                     {% else %}
                         <span style="color:#888">Nenhuma conquista ainda.</span>
