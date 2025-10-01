@@ -4,27 +4,116 @@
     "nome": "Rafael",
     "email": "teste@gmail.com",
     "senha": "$2b$12$BIiWpNvYS2gcqK1qkgarUOYgDndqFQeXJzyL1JaF6.49PrHe3F/PK",
-    "avatar": "",
-    "points": 30,
-    "last_seen": 1758822018,
+    "avatar": "uploads/avatar_USRSZD0XV8_1758975369.gif",
+    "points": 60,
+    "last_seen": 1758976625,
     "friends": [
       "USRWRPWIHU"
     ],
     "ultimo_uso_ia": 0,
     "data_criacao": 1758240753,
-    "data_nascimento": "",
-    "frase_pessoal": "",
+    "data_nascimento": "3322-02-21",
+    "frase_pessoal": "O homem nasce bom, mas a calvicie o corrompe.   Lollllllllllllllllllllllllllllllllllllllllllllllllll",
     "tema": "dark",
-    "prev_seen": 1758822018,
+    "prev_seen": 1758976332,
     "badges": [],
-    "conquistas": [],
+    "conquistas": [
+      "⚡ Resposta Relâmpago",
+      "🧠 Primeiro Card",
+      "🔁 Revisador Profissional"
+    ],
     "stats": {
       "deck_review_counts": {
-        "matematica_fbbc": 3
+        "matematica_fbbc": 9,
+        "rewrw_a07f": 3
+      },
+      "fast_answers": 1,
+      "study_history": [
+        {
+          "ts": 1758907196,
+          "card_id": "66d7520d-7335-4e18-9f95-9cc227d06c18",
+          "acertou": true
+        },
+        {
+          "ts": 1758907515,
+          "card_id": "66d7520d-7335-4e18-9f95-9cc227d06c18",
+          "acertou": true
+        },
+        {
+          "ts": 1758907756,
+          "card_id": "66d7520d-7335-4e18-9f95-9cc227d06c18",
+          "acertou": true
+        },
+        {
+          "ts": 1758908987,
+          "card_id": "66d7520d-7335-4e18-9f95-9cc227d06c18",
+          "acertou": false,
+          "frente": "1 + 1",
+          "verso": "2",
+          "baralho": "matematica",
+          "baralho_id": "matematica_fbbc"
+        },
+        {
+          "ts": 1758909589,
+          "card_id": "66d7520d-7335-4e18-9f95-9cc227d06c18",
+          "acertou": false,
+          "frente": "1 + 1",
+          "verso": "2",
+          "baralho": "matematica",
+          "baralho_id": "matematica_fbbc"
+        },
+        {
+          "ts": 1758909596,
+          "card_id": "960919bd-2332-41ca-a1a0-24c02dfb1b7f",
+          "acertou": false,
+          "frente": "4",
+          "verso": "4",
+          "baralho": "rewrw",
+          "baralho_id": "rewrw_a07f"
+        },
+        {
+          "ts": 1758975290,
+          "card_id": "66d7520d-7335-4e18-9f95-9cc227d06c18",
+          "acertou": false,
+          "frente": "1 + 1",
+          "verso": "2",
+          "baralho": "matematica",
+          "baralho_id": "matematica_fbbc"
+        },
+        {
+          "ts": 1758976683,
+          "card_id": "960919bd-2332-41ca-a1a0-24c02dfb1b7f",
+          "acertou": false,
+          "frente": "4",
+          "verso": "4",
+          "baralho": "rewrw",
+          "baralho_id": "rewrw_a07f"
+        }
+      ],
+      "quizzes_finished": 8,
+      "points_gained": 30,
+      "messages_sent": 3,
+      "cards_created": 1,
+      "error_patterns": {
+        "1": 3,
+        "2": 1,
+        "3": 1
+      },
+      "deck_errors": {
+        "matematica_fbbc": {
+          "nome": "matematica",
+          "count": 3
+        },
+        "rewrw_a07f": {
+          "nome": "rewrw",
+          "count": 2
+        }
       }
     },
     "hard_cards": [],
-    "favorites": []
+    "favorites": [
+      "66d7520d-7335-4e18-9f95-9cc227d06c18"
+    ]
   },
   "USRWRPWIHU": {
     "id": "USRWRPWIHU",
@@ -32,8 +121,8 @@
     "email": "rmsrafael05@hotmail.com",
     "senha": "$2b$12$R6WcmCPZnFnl5UMLd255p.M71zY3S4L6xAp9M9vthM04s4oFrmUpW",
     "avatar": "",
-    "points": 0,
-    "last_seen": 1758822123,
+    "points": 20,
+    "last_seen": 1758976137,
     "friends": [
       "USRSZD0XV8"
     ],
@@ -48,7 +137,7 @@
         "user1": "USRSZD0XV8",
         "user2": "USRWRPWIHU",
         "deck_id": "matematica_fbbc",
-        "status": "pendente",
+        "status": "recusado",
         "pontuacao1": 0,
         "pontuacao2": 0,
         "inicio": 1758738314.2664027,
@@ -59,7 +148,7 @@
         "user1": "USRSZD0XV8",
         "user2": "USRWRPWIHU",
         "deck_id": "matematica_fbbc",
-        "status": "pendente",
+        "status": "recusado",
         "pontuacao1": 0,
         "pontuacao2": 0,
         "inicio": 1758739170.6036992,
@@ -70,7 +159,7 @@
         "user1": "USRSZD0XV8",
         "user2": "USRWRPWIHU",
         "deck_id": "matematica_fbbc",
-        "status": "pendente",
+        "status": "recusado",
         "pontuacao1": 0,
         "pontuacao2": 0,
         "inicio": 1758812148.7815654,
@@ -81,19 +170,245 @@
         "user1": "USRSZD0XV8",
         "user2": "USRWRPWIHU",
         "deck_id": "matematica_fbbc",
-        "status": "pendente",
+        "status": "recusado",
         "pontuacao1": 0,
         "pontuacao2": 0,
         "inicio": 1758812666.6828566,
+        "fim": null
+      },
+      {
+        "id": "comp_1758975424_USRSZD0XV8_USRWRPWIHU",
+        "user1": "USRSZD0XV8",
+        "user2": "USRWRPWIHU",
+        "deck_id": "matematica_fbbc",
+        "status": "em_andamento",
+        "pontuacao1": 0,
+        "pontuacao2": 0,
+        "inicio": 1758975424.5988264,
         "fim": null
       }
     ],
     "badges": [],
     "conquistas": [
-      "🤝 Primeiro Amigo"
+      "🤝 Primeiro Amigo",
+      "🧠 Primeiro Card",
+      "🧃 Amigo da Onça",
+      "Desafio Aceito"
     ],
     "stats": {
-      "friends_added": 1
-    }
+      "friends_added": 1,
+      "cards_created": 3,
+      "deck_review_counts": {
+        "fwrw_6ee4": 3,
+        "testt_1f69": 1
+      },
+      "invites_refused_streak": 4,
+      "study_history": [
+        {
+          "ts": 1758975657,
+          "card_id": "d7000589-2ef1-46f8-8b9e-cdb680ccd003",
+          "acertou": false,
+          "frente": "1",
+          "verso": "1",
+          "baralho": "fwrw",
+          "baralho_id": "fwrw_6ee4"
+        },
+        {
+          "ts": 1758975760,
+          "card_id": "5763c67d-84c7-432a-ad98-a015afdf7385",
+          "acertou": true,
+          "frente": "Ele e gay?",
+          "verso": "E sim",
+          "baralho": "testt",
+          "baralho_id": "testt_1f69"
+        },
+        {
+          "ts": 1758975834,
+          "card_id": "5763c67d-84c7-432a-ad98-a015afdf7385",
+          "acertou": false,
+          "frente": "Ele e gay?",
+          "verso": "E sim",
+          "baralho": "testt",
+          "baralho_id": "testt_1f69"
+        },
+        {
+          "ts": 1758975845,
+          "card_id": "5763c67d-84c7-432a-ad98-a015afdf7385",
+          "acertou": false,
+          "frente": "Ele e gay?",
+          "verso": "E sim",
+          "baralho": "testt",
+          "baralho_id": "testt_1f69"
+        },
+        {
+          "ts": 1758975931,
+          "card_id": "5cc087b6-319b-4952-95be-f5c7d0edb80f",
+          "acertou": true,
+          "frente": "Almeida e muito viadinho?",
+          "verso": "Acredito que sim ne",
+          "baralho": "fwrw",
+          "baralho_id": "fwrw_6ee4"
+        },
+        {
+          "ts": 1758975945,
+          "card_id": "d7000589-2ef1-46f8-8b9e-cdb680ccd003",
+          "acertou": false,
+          "frente": "1",
+          "verso": "1",
+          "baralho": "fwrw",
+          "baralho_id": "fwrw_6ee4"
+        },
+        {
+          "ts": 1758975958,
+          "card_id": "5cc087b6-319b-4952-95be-f5c7d0edb80f",
+          "acertou": false,
+          "frente": "Almeida e muito viadinho?",
+          "verso": "Acredito que sim ne",
+          "baralho": "fwrw",
+          "baralho_id": "fwrw_6ee4"
+        }
+      ],
+      "error_patterns": {
+        "10": 1,
+        "1": 3,
+        "16": 1
+      },
+      "deck_errors": {
+        "fwrw_6ee4": {
+          "nome": "fwrw",
+          "count": 3
+        },
+        "testt_1f69": {
+          "nome": "testt",
+          "count": 2
+        }
+      },
+      "quizzes_finished": 4,
+      "points_gained": 20
+    },
+    "prev_seen": 1758976137
+  },
+  "USR6PYOPNW": {
+    "id": "USR6PYOPNW",
+    "nome": "Pay",
+    "email": "pay@gmail.com",
+    "senha": "$2b$12$KK04ALtUET2JXFwR50UeW./AVdImIuu7YcIzmEc1E97pyP5EBVJ6W",
+    "avatar": "uploads/avatar_USR6PYOPNW_1758835784.gif",
+    "points": 40,
+    "last_seen": 1758837592,
+    "friends": [
+      "USRY0K3BHX"
+    ],
+    "ultimo_uso_ia": 0,
+    "data_criacao": 1758834757,
+    "data_nascimento": "3322-02-21",
+    "frase_pessoal": "O homem nasce bom, mas a calvicie o corrompe.   Lollllllllllllllllllllllllllllllllllllllllllllllllll",
+    "tema": "dark",
+    "badges": [],
+    "conquistas": [
+      "🧠 Primeiro Card"
+    ],
+    "stats": {
+      "cards_created": 2,
+      "deck_review_counts": {
+        "matematica_b9f1": 4
+      },
+      "study_history": [
+        {
+          "ts": 1758835929,
+          "card_id": "4197dc15-cf8f-4ce3-91ee-5a3af27fb81f",
+          "acertou": true
+        },
+        {
+          "ts": 1758835938,
+          "card_id": "0f6ddaca-dc05-4e23-8e6b-fb1ecce6902b",
+          "acertou": true
+        },
+        {
+          "ts": 1758836828,
+          "card_id": "0f6ddaca-dc05-4e23-8e6b-fb1ecce6902b",
+          "acertou": true
+        },
+        {
+          "ts": 1758836834,
+          "card_id": "4197dc15-cf8f-4ce3-91ee-5a3af27fb81f",
+          "acertou": true
+        },
+        {
+          "ts": 1758904550,
+          "card_id": "0f6ddaca-dc05-4e23-8e6b-fb1ecce6902b",
+          "acertou": false
+        },
+        {
+          "ts": 1758904552,
+          "card_id": "4197dc15-cf8f-4ce3-91ee-5a3af27fb81f",
+          "acertou": false
+        }
+      ],
+      "quizzes_finished": 3,
+      "points_gained": 40,
+      "error_patterns": {
+        "1": 2
+      }
+    },
+    "prev_seen": 1758837592,
+    "favorites": [],
+    "hard_cards": [
+      "4197dc15-cf8f-4ce3-91ee-5a3af27fb81f"
+    ]
+  },
+  "USRY0K3BHX": {
+    "id": "USRY0K3BHX",
+    "nome": "jack",
+    "email": "jack@gmail.com",
+    "senha": "$2b$12$n0nBYHhQOh6wdtpVIBAAounumFmFbftSEbc3FaB4QOnPk1E.iM1kO",
+    "avatar": "",
+    "points": 0,
+    "last_seen": 1758837913,
+    "friends": [
+      "USR6PYOPNW"
+    ],
+    "ultimo_uso_ia": 0,
+    "data_criacao": 1758834806,
+    "data_nascimento": "",
+    "frase_pessoal": "",
+    "tema": "dark",
+    "badges": [],
+    "conquistas": [
+      "🤝 Primeiro Amigo",
+      "Desafio Aceito"
+    ],
+    "stats": {
+      "friends_added": 1,
+      "deck_review_counts": {
+        "shared_matematica_b9f1": 2
+      }
+    },
+    "prev_seen": 1758837421,
+    "favorites": [],
+    "competicoes": [
+      {
+        "id": "comp_1758835874_USR6PYOPNW_USRY0K3BHX",
+        "user1": "USR6PYOPNW",
+        "user2": "USRY0K3BHX",
+        "deck_id": "matematica_b9f1",
+        "status": "aceita",
+        "pontuacao1": 0,
+        "pontuacao2": 0,
+        "inicio": 1758835874.70699,
+        "fim": null
+      },
+      {
+        "id": "comp_1758836938_USR6PYOPNW_USRY0K3BHX",
+        "user1": "USR6PYOPNW",
+        "user2": "USRY0K3BHX",
+        "deck_id": "matematica_b9f1",
+        "status": "aceita",
+        "pontuacao1": 0,
+        "pontuacao2": 0,
+        "inicio": 1758836938.2821965,
+        "fim": null
+      }
+    ]
   }
 }

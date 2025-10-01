@@ -67,34 +67,37 @@ for item in _feed_data:
 
 @feed_bp.route('/feed')
 def feed():
+    from app import usuarios
     user_id = session.get('user_id')
     # Exibe atividades dos amigos e do próprio usuário
-    amigos = []
-    if user_id and 'usuarios' in globals():
-        amigos = globals()['usuarios'][user_id].get('friends', [])
-    atividades_exibir = [a for a in atividades if a.usuario_id == user_id or a.usuario_id in amigos]
+    atividades_exibir = []
+    if user_id and user_id in usuarios:
+        amigos = usuarios[user_id].get('friends', [])
+        atividades_exibir = [a for a in atividades if a.usuario_id == user_id or a.usuario_id in amigos]
+    
     atividades_exibir.sort(key=lambda x: x.data, reverse=True)
-    amigos_info = []
-    if 'usuarios' in globals():
-        for fid in amigos:
-            nome = globals()['usuarios'].get(fid, {}).get('nome', fid)
-            amigos_info.append({'id': fid, 'nome': nome})
-    # Enriquecer atividades com nomes e ícone por tipo
+    
+    # Enriquecer atividades com nomes, ícone e dados de comentários
     atividades_dicts = []
-    get_nome = (lambda uid: globals()['usuarios'].get(uid, {}).get('nome', uid)) if 'usuarios' in globals() else (lambda x: x)
+    get_nome = lambda uid: usuarios.get(uid, {}).get('nome', uid)
+    get_avatar = lambda uid: usuarios.get(uid, {}).get('avatar', '')
     tipo_icone = {
         'criou_baralho': '📚',
+        'criou_card': '📝',
         'conquista': '🏅',
         'desafio': '🎯',
         'mensagem': '✉️',
-        'resultado': '🏆'
+        'resultado': '🏆',
+        'amizade': '🤝',
+        'compartilhar': '📤'
     }
     for a in atividades_exibir:
         d = a.to_dict()
         d['usuario_nome'] = get_nome(d['usuario_id'])
+        d['usuario_id'] = a.usuario_id
         d['icone'] = tipo_icone.get(d['tipo'], '📰')
         atividades_dicts.append(d)
-    return render_template('feed.html', atividades=atividades_dicts, amigos=amigos_info)
+    return render_template('feed.html', atividades=atividades_dicts)
 
 @feed_bp.route('/feed/list')
 def feed_list():

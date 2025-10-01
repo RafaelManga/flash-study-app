@@ -12,16 +12,153 @@
     <small style="color:var(--muted)">Cada bloco representa uma hora do dia (0-23).</small>
   </div>
 
+  <div class="card" style="margin-bottom:16px;">
+    <h3 style="margin-bottom:8px;">Tempo Total de Estudo</h3>
+    <div><strong>{{ tempo_minutos }}</strong> minutos de estudo registrados</div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <h3 style="margin-bottom:8px;">Conquistas Desbloqueadas</h3>
+    {% if conquistas and conquistas|length > 0 %}
+      <ul style="display:flex;gap:12px;flex-wrap:wrap;list-style:none;padding:0;">
+        {% for c in conquistas %}
+          <li style="background:#e0e7ff;color:#3730a3;padding:6px 14px;border-radius:16px;font-weight:bold;">🏅 {{ c }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div style="color:var(--muted)">Nenhuma conquista desbloqueada ainda.</div>
+    {% endif %}
+  </div>
+
   <div class="card">
     <h3 style="margin-bottom:8px;">Padrões de Erro</h3>
     <div id="errors" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
-    <small style="color:var(--muted)">Distribuição por tamanho de resposta incorreta.</small>
+    <small style="color:var(--muted)">Contagem de respostas incorretas por tamanho da resposta (número de caracteres).</small>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h3 style="margin-bottom:8px;">Erros por Baralho</h3>
+    {% if deck_errors_sorted and deck_errors_sorted|length > 0 %}
+      {% set total_decks = deck_errors_sorted|length %}
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;">
+        {% for deck_id, info in deck_errors_sorted[:5] %}
+          <li style="display:flex;gap:12px;justify-content:space-between;align-items:center;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;">
+            <div>
+              <strong>{{ info.nome }}</strong>
+              <span style="color:#6b7280;">(ID: {{ deck_id }})</span>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;">
+              <span style="color:#b91c1c;font-weight:600;">{{ info.count }} erro(s)</span>
+              <a href="/estudar/{{ deck_id }}" class="btn btn-sm" style="background:#3b82f6;color:#fff;border-radius:8px;">Estudar</a>
+            </div>
+          </li>
+        {% endfor %}
+        {% if total_decks > 5 %}
+          <div id="erros-restantes" style="display:none;">
+            {% for deck_id, info in deck_errors_sorted[5:] %}
+              <li style="display:flex;gap:12px;justify-content:space-between;align-items:center;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;">
+                <div>
+                  <strong>{{ info.nome }}</strong>
+                  <span style="color:#6b7280;">(ID: {{ deck_id }})</span>
+                </div>
+                <div style="display:flex;gap:12px;align-items:center;">
+                  <span style="color:#b91c1c;font-weight:600;">{{ info.count }} erro(s)</span>
+                  <a href="/estudar/{{ deck_id }}" class="btn btn-sm" style="background:#3b82f6;color:#fff;border-radius:8px;">Estudar</a>
+                </div>
+              </li>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </ul>
+      {% if total_decks > 5 %}
+        <div style="margin-top:8px;">
+          <button id="toggle-erros-deck" class="btn btn-sm" style="background:#e5e7eb;color:#111827;border-radius:8px;">Ver todos</button>
+        </div>
+      {% endif %}
+    {% else %}
+      <div style="color:var(--muted)">Sem erros registrados por baralho ainda.</div>
+    {% endif %}
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h3 style="margin-bottom:8px;">Gráfico de Erros por Baralho</h3>
+    <div id="deck-error-chart" style="display:flex; align-items:flex-end; gap:10px; height:200px; padding:10px; border:1px dashed #e5e7eb; border-radius:10px; background:#fafafa; overflow-x:auto;"></div>
+    <small style="color:var(--muted)">Cada barra representa a quantidade de erros cometidos em um baralho.</small>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h3 style="margin-bottom:8px;">Questões Erradas Recentes</h3>
+    {% if history %}
+      {% set erros_recentes = history | selectattr('acertou', 'equalto', false) | list %}
+      {% if erros_recentes %}
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          {% for erro in erros_recentes[:10] %}
+            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                <div style="font-weight:600;color:#991b1b;">{{ erro.frente or 'Pergunta não disponível' }}</div>
+                <small style="color:#6b7280;">{{ erro.ts | datetime }}</small>
+              </div>
+              <div style="color:#374151;margin-bottom:8px;">
+                <strong>Resposta correta:</strong> {{ erro.verso or 'Não disponível' }}
+              </div>
+              {% if erro.baralho %}
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="color:#6b7280;font-size:0.9em;">Baralho: {{ erro.baralho }}</span>
+                  {% if erro.baralho_id %}
+                    <a href="/estudar/{{ erro.baralho_id }}" style="background:#dc2626;color:#fff;padding:4px 12px;border-radius:6px;text-decoration:none;font-size:0.85em;font-weight:600;">Revisar</a>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="color:var(--muted)">Nenhuma questão errada registrada recentemente.</div>
+      {% endif %}
+    {% else %}
+      <div style="color:var(--muted)">Sem histórico de estudo ainda.</div>
+    {% endif %}
+  </div>
+
+  <div class="card" style="margin-top:16px;background:#f0fdf4;">
+    <h3 style="margin-bottom:16px;font-size:1.25em;color:#059669;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:1.3em;">💡</span> Sugestões Personalizadas
+    </h3>
+    <div style="display:flex;flex-wrap:wrap;gap:18px;">
+      {% for s in sugestoes %}
+        <div style="background:#fff;border-radius:14px;box-shadow:0 2px 8px #0001;padding:18px 20px;min-width:220px;max-width:320px;flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.5em;">
+              {% if 'hábito' in s.lower() %}⏰{% elif 'desafio' in s.lower() %}🏆{% elif 'amigo' in s.lower() %}🤝{% elif 'revisar' in s.lower() %}🔄{% elif 'estudar' in s.lower() %}📚{% else %}💡{% endif %}
+            </span>
+            <span style="font-weight:600;font-size:1.07em;color:#2c3e50;">{{ s.split(':')[0] if ':' in s else s[:32] }}</span>
+          </div>
+          <div class="sugestao-texto" style="color:#2c3e50;font-weight:500;margin-bottom:10px;">{{ s.split(':',1)[1] if ':' in s else '' }}</div>
+          {% if 'desafio' in s.lower() %}
+            <a href="/competicao" class="btn btn-sm sugestao-btn" style="background:#fbbf24;color:#78350f;font-weight:bold;border-radius:8px;transition:filter .18s;">Criar novo desafio</a>
+          {% elif 'estudar' in s.lower() or 'revisar' in s.lower() %}
+            <a href="{{ estudar_url or '/meus_baralhos' }}" class="btn btn-sm sugestao-btn" style="background:#3b82f6;color:#fff;font-weight:bold;border-radius:8px;transition:filter .18s;">Estudar agora</a>
+          {% elif 'amigo' in s.lower() %}
+            <a href="/feed#dm" class="btn btn-sm sugestao-btn" style="background:#a7f3d0;color:#065f46;font-weight:bold;border-radius:8px;transition:filter .18s;">Conversar com amigos</a>
+          {% endif %}
+        </div>
+</div>
+<style>
+.sugestao-texto { color: #2c3e50; font-weight: 500; margin-bottom: 10px; }
+.sugestao-btn:hover { filter: brightness(1.08) contrast(1.1) drop-shadow(0 2px 8px #3b82f655); }
+</style>
+      {% endfor %}
+      {% if not sugestoes or sugestoes|length == 0 %}
+        <div style="color:#aaa;font-size:1.05em;">Nenhuma sugestão personalizada no momento.</div>
+      {% endif %}
+    </div>
   </div>
 </div>
 
 <script>
 const heat = {{ heat | tojson | safe }};
 const errorPatterns = {{ error_patterns | tojson | safe }};
+const deckErrors = {{ (deck_errors_sorted or []) | tojson | safe }};
 
 function renderHeat(){
   const el = document.getElementById('heatmap');
@@ -52,17 +189,29 @@ function renderErrors(){
   const el = document.getElementById('errors');
   const entries = Object.entries(errorPatterns).sort((a,b)=>Number(a[0])-Number(b[0]));
   const maxv = Math.max(1, ...entries.map(e=>e[1]));
-  entries.forEach(([k,v])=>{
+  entries.forEach(([tamanho,respostasErradas])=>{
     const chip = document.createElement('div');
     chip.className='badge-chip';
-    chip.textContent = `len ${k}: ${v}`;
+    chip.style.display='inline-flex';
+    chip.style.alignItems='center';
+    chip.style.gap='8px';
+    chip.style.padding='8px 12px';
+    chip.style.borderRadius='999px';
+    chip.style.color='#fff';
     chip.style.background = `linear-gradient(90deg,#ef4444,#b91c1c)`;
-    chip.style.opacity = String(0.4 + (v/maxv)*0.6);
+    chip.style.opacity = String(0.4 + (respostasErradas/maxv)*0.6);
+    const label = document.createElement('span');
+    label.textContent = `Tamanho ${tamanho}`;
+    const count = document.createElement('strong');
+    count.textContent = `${respostasErradas} erro(s)`;
+    chip.appendChild(label);
+    chip.appendChild(count);
     el.appendChild(chip);
   });
   if(entries.length === 0){
     const empty = document.createElement('div');
-    empty.style.color='var(--muted)'; empty.textContent='Sem dados suficientes ainda.';
+    empty.style.color='var(--muted)';
+    empty.textContent='Sem dados suficientes ainda.';
     el.appendChild(empty);
   }
 }
@@ -70,7 +219,69 @@ function renderErrors(){
 document.addEventListener('DOMContentLoaded', function(){
   renderHeat();
   renderErrors();
+  const btn = document.getElementById('toggle-erros-deck');
+  if(btn){
+    btn.addEventListener('click', function(){
+      const cont = document.getElementById('erros-restantes');
+      if(!cont) return;
+      const vis = cont.style.display !== 'none';
+      cont.style.display = vis ? 'none' : 'block';
+      btn.textContent = vis ? 'Ver todos' : 'Ocultar';
+    });
+  }
+  renderDeckErrorsChart();
 });
+
+function renderDeckErrorsChart(){
+  const el = document.getElementById('deck-error-chart');
+  if(!el || !deckErrors || deckErrors.length === 0){
+    if(el){
+      const empty = document.createElement('div');
+      empty.style.color='var(--muted)';
+      empty.textContent='Sem dados suficientes ainda.';
+      el.appendChild(empty);
+    }
+    return;
+  }
+  const top = deckErrors.slice(0, 10);
+  const maxv = Math.max(1, ...top.map(([_, info]) => (info && info.count) || 0));
+  top.forEach(([deckId, info]) => {
+    const count = (info && info.count) || 0;
+    const bar = document.createElement('div');
+    bar.style.width = '42px';
+    bar.style.minWidth = '42px';
+    bar.style.height = `${Math.round((count / maxv) * 100) + 20}px`;
+    bar.style.borderRadius = '6px 6px 0 0';
+    bar.style.background = 'linear-gradient(180deg,#ef4444,#b91c1c)';
+    bar.style.position = 'relative';
+    bar.title = `${info && info.nome ? info.nome : deckId}: ${count} erro(s)`;
+    const label = document.createElement('div');
+    label.style.position = 'absolute';
+    label.style.bottom = '-28px';
+    label.style.left = '50%';
+    label.style.transform = 'translateX(-50%)';
+    label.style.fontSize = '10px';
+    label.style.color = '#374151';
+    label.style.textAlign = 'center';
+    label.style.width = '70px';
+    label.style.whiteSpace = 'nowrap';
+    label.style.overflow = 'hidden';
+    label.style.textOverflow = 'ellipsis';
+    label.textContent = info && info.nome ? info.nome : deckId;
+    const value = document.createElement('div');
+    value.style.position = 'absolute';
+    value.style.top = '-18px';
+    value.style.left = '50%';
+    value.style.transform = 'translateX(-50%)';
+    value.style.fontSize = '11px';
+    value.style.color = '#b91c1c';
+    value.style.fontWeight = '700';
+    value.textContent = count;
+    bar.appendChild(value);
+    bar.appendChild(label);
+    el.appendChild(bar);
+  });
+}
 </script>
 {% endblock %}
 

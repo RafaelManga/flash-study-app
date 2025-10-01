@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Chat entre Amigos - FlashStudy{% endblock %}
+
+{% block content %}
+<style>
+  .chat-main-container { display: flex; gap: 0; max-width: 980px; margin: 0 auto; background: #18181b; border-radius: 18px; box-shadow: 0 2px 16px #0002; min-height: 520px; }
+  .chat-sidebar { width: 260px; background: #f3f4f6; border-radius: 18px 0 0 18px; padding: 18px 0; box-shadow: 2px 0 8px #0001; display: flex; flex-direction: column; }
+  .chat-sidebar-title { font-weight: bold; font-size: 1.1em; color: #2563eb; padding: 0 22px 10px 22px; }
+  .chat-friend-list { flex: 1; overflow-y: auto; }
+  .chat-friend-item { display: flex; align-items: center; gap: 12px; padding: 10px 22px; cursor: pointer; border-radius: 10px; transition: background .18s; }
+  .chat-friend-item.active, .chat-friend-item:hover { background: #e0e7ef; }
+  .chat-friend-avatar { width: 38px; height: 38px; border-radius: 50%; background: #e0e7ef; display: flex; align-items: center; justify-content: center; font-size: 1.3em; }
+  .chat-friend-name { font-weight: 600; color: #222; }
+  .chat-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .chat-header { font-weight: bold; font-size: 1.13em; color: #fff; background: #1e293b; border-radius: 0 18px 0 0; padding: 16px 24px; min-height: 56px; display: flex; align-items: center; gap: 12px; }
+  .chat-header-avatar { width: 36px; height: 36px; border-radius: 50%; background: #e0e7ef; display: flex; align-items: center; justify-content: center; font-size: 1.1em; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 24px 24px 12px 24px; display: flex; flex-direction: column; gap: 12px; background: #18181b; }
+  .chat-msg-row { display: flex; align-items: flex-end; gap: 10px; }
+  .chat-msg-row.me { flex-direction: row-reverse; }
+  .chat-msg-avatar { width: 32px; height: 32px; border-radius: 50%; background: #e0e7ef; display: flex; align-items: center; justify-content: center; font-size: 1.1em; }
+  .chat-msg-bubble { max-width: 64%; padding: 12px 18px; border-radius: 18px; background: #f4f4f5; color: #222; position: relative; box-shadow: 0 1px 4px #0001; word-break: break-word; }
+  .chat-msg-row.me .chat-msg-bubble { background: #3b82f6; color: #fff; border-bottom-right-radius: 8px; border-bottom-left-radius: 18px; }
+  .chat-msg-row:not(.me) .chat-msg-bubble { background: #fff; color: #222; border-bottom-left-radius: 8px; border-bottom-right-radius: 18px; }
+  .chat-msg-nome { font-size: 0.93em; font-weight: 600; margin-bottom: 2px; color: #6366f1; }
+  .chat-msg-hora { font-size: 0.78em; color: #888; position: absolute; right: 16px; bottom: 4px; }
+  .chat-form-bar { display: flex; gap: 10px; align-items: center; padding: 16px 24px 18px 24px; background: #18181b; border-radius: 0 0 18px 0; }
+  .chat-input { flex: 1; border-radius: 18px; border: 1px solid #e5e7eb; padding: 10px 16px; font-size: 1.05em; outline: none; }
+  .chat-send-btn { background: linear-gradient(90deg,#3b82f6,#06b6d4); color: #fff; border: none; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 1.4em; cursor: pointer; transition: background .2s; }
+  .chat-send-btn:hover { background: linear-gradient(90deg,#2563eb,#0ea5e9); }
+</style>
+<div class="chat-main-container">
+  <div class="chat-sidebar">
+    <div class="chat-sidebar-title">Amigos</div>
+    <div class="chat-friend-list" id="chat-friend-list">
+      {% for amigo in amigos %}
+      <div class="chat-friend-item" onclick="abrirChat('{{ amigo.id }}', '{{ amigo.nome }}', '{% if amigo.avatar %}{{ amigo.avatar }}{% endif %}')" id="chat-amigo-{{ amigo.id }}">
+        <span class="chat-friend-avatar">{% if amigo.avatar %}<img src="/{{ amigo.avatar }}" style="width:100%;height:100%;object-fit:cover;"/>{% else %}👤{% endif %}</span>
+        <span class="chat-friend-name">{{ amigo.nome }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="chat-content">
+    <div class="chat-header" id="chat-header"></div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <form class="chat-form-bar" id="chat-form" onsubmit="enviarChatMsg(event)">
+      <input id="chat-input" class="chat-input" type="text" placeholder="Digite uma mensagem ou emoji..." autocomplete="off"/>
+      <button id="chat-send" class="chat-send-btn" title="Enviar" aria-label="Enviar" type="submit">
+        <span style="font-size:1.3em;">🛩️</span>
+      </button>
+    </form>
+  </div>
+</div>
+<script>
+let chatFriendId = '';
+let chatFriendNome = '';
+let chatFriendAvatar = '';
+let chatPolling = null;
+function abrirChat(friend_id, nome, avatar) {
+  chatFriendId = friend_id;
+  chatFriendNome = nome;
+  chatFriendAvatar = avatar;
+  document.getElementById('chat-header').innerHTML = `<span class='chat-header-avatar'>${avatar ? `<img src='/${avatar}' style='width:100%;height:100%;object-fit:cover;'/>` : '👤'}</span> <span>${nome}</span>`;
+  document.querySelectorAll('.chat-friend-item').forEach(li => li.classList.remove('active'));
+  const li = document.getElementById('chat-amigo-' + friend_id);
+  if (li) li.classList.add('active');
+  carregarChatMsgs();
+  if (chatPolling) clearInterval(chatPolling);
+  chatPolling = setInterval(carregarChatMsgs, 3000);
+}
+function carregarChatMsgs() {
+  const box = document.getElementById('chat-messages');
+  if (!chatFriendId) { box.innerHTML = '<div style="color:#888;text-align:center;">Selecione um amigo para conversar.</div>'; return; }
+  fetch(`/feed/dm/list?friend_id=${encodeURIComponent(chatFriendId)}`)
+    .then(r => r.json())
+    .then(data => {
+      const msgs = data.msgs || [];
+      const userId = '{{ usuario.id if usuario else "" }}';
+      box.innerHTML = msgs.length ? msgs.map(m => {
+        const isMe = m.from === userId;
+        const hora = new Date(m.ts*1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+        const nome = isMe ? 'Você' : chatFriendNome;
+        const userAvatar = "{{ usuario.avatar|default('', true) }}";
+        const avatar = isMe ? (userAvatar || '') : (chatFriendAvatar || '');
+        return `
+          <div class="chat-msg-row${isMe ? ' me' : ''}">
+            <span class="chat-msg-avatar">${avatar ? `<img src='/${avatar}' style='width:100%;height:100%;object-fit:cover;'/>` : '👤'}</span>
+            <div class="chat-msg-bubble">
+              <div class="chat-msg-nome">${nome}</div>
+              <div>${m.texto}</div>
+              <span class="chat-msg-hora">${hora}</span>
+            </div>
+          </div>
+        `;
+      }).join('') : '<div style="color:#888;text-align:center;">Nenhuma mensagem ainda.</div>';
+      box.scrollTop = box.scrollHeight;
+    });
+}
+function enviarChatMsg(e) {
+  if (e) e.preventDefault();
+  const texto = document.getElementById('chat-input').value.trim();
+  if (!chatFriendId || !texto) return;
+  const btn = document.getElementById('chat-send');
+  btn.classList.add('loading');
+  fetch('/feed/dm/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ friend_id: chatFriendId, texto })
+  }).then(() => {
+    document.getElementById('chat-input').value='';
+    carregarChatMsgs();
+  }).finally(()=> btn.classList.remove('loading'));
+}
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('chat-form').addEventListener('submit', enviarChatMsg);
+  document.getElementById('chat-input').addEventListener('keydown', function(e){
+    if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); enviarChatMsg(e); }
+  });
+  // Se hash #dm=amigo, abre direto
+  const hash = window.location.hash || '';
+  const m = hash.match(/#dm=([^&]+)/);
+  if (m) {
+    const amigoId = decodeURIComponent(m[1]);
+    const li = document.getElementById('chat-amigo-' + amigoId);
+    if (li) li.click();
+  }
+});
+</script>
+{% endblock %}

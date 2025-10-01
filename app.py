@@ -1,3 +1,8 @@
+
+
+# --- Página de Chat Privado entre Amigos ---
+# (deve ficar após a criação do objeto app)
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -215,7 +220,7 @@ def aceitar_competicao():
     for uid, user in usuarios.items():
         for comp in user.get("competicoes", []):
             if comp.get("id") == comp_id:
-                comp["status"] = "aceita"
+                comp["status"] = "em_andamento"
                 salvar_dados(USERS_PATH, usuarios)
                 adicionar_conquista(uid, "Desafio Aceito")
                 try:
@@ -223,8 +228,47 @@ def aceitar_competicao():
                     registrar_atividade('desafio', uid, f'Aceitou um desafio!')
                 except Exception:
                     pass
-                return jsonify({"msg": "Competição aceita!", "comp_id": comp_id})
+                # Inicia sessão de competição para ambos
+                # Salva na sessão do usuário que aceitou
+                session['competicao_id'] = comp_id
+                session['competicao_inicio'] = agora_timestamp()
+                session['competicao_deck'] = comp.get('deck_id')
+                session['competicao_user1'] = comp.get('user1')
+                session['competicao_user2'] = comp.get('user2')
+                # Redireciona para execução do desafio
+                return jsonify({"msg": "Competição iniciada! Redirecionando...", "redirect": f"/competicao/executar/{comp_id}"})
     return jsonify({"msg": "Desafio não encontrado."}), 404
+# --- Execução de Competição entre Amigos ---
+@app.route('/competicao/executar/<comp_id>')
+def executar_competicao(comp_id):
+    # Busca dados da competição
+    user_id = session.get('user_id')
+    for uid, user in usuarios.items():
+        for comp in user.get('competicoes', []):
+            if comp.get('id') == comp_id:
+                # Só participantes podem acessar
+                if user_id not in [comp.get('user1'), comp.get('user2')]:
+                    flash('Acesso negado à competição.', 'danger')
+                    return redirect(url_for('pagina_competicao'))
+                # Monta desafio com baralho
+                deck_id = comp.get('deck_id')
+                from baralho import get_cards_for_deck
+                cards = get_cards_for_deck(deck_id, usuarios, baralhos, shared_decks)
+                # Monta estrutura igual ao desafio normal
+                desafio = {
+                    'cards': cards,
+                    'tempo_por_questao': 30,
+                    'questao_atual': 0,
+                    'respostas': [],
+                    'inicio': agora_timestamp(),
+                    'competicao_id': comp_id,
+                    'user1': comp.get('user1'),
+                    'user2': comp.get('user2')
+                }
+                session['desafio'] = desafio
+                return render_template('executar_desafio.html', desafio=desafio, competicao=True)
+    flash('Competição não encontrada.', 'danger')
+    return redirect(url_for('pagina_competicao'))
 
 @app.route('/competicao/ranking', methods=['GET'])
 def ranking_competicao():
@@ -361,6 +405,22 @@ def index():
     if "user_id" in session:
         return redirect(url_for("home"))
     return redirect(url_for("login"))
+
+# --- Página de Chat entre Amigos ---
+@app.route('/chat')
+@login_required
+def chat_page():
+    # Monta lista de amigos do usuário logado com nome e avatar
+    amigos_info = []
+    for friend_id in g.user.get("friends", []):
+        friend = usuarios.get(friend_id)
+        if friend:
+            amigos_info.append({
+                "id": friend_id,
+                "nome": friend.get("nome") or friend.get("email") or friend_id,
+                "avatar": friend.get("avatar", "")
+            })
+    return render_template('chat.html', amigos=amigos_info)
 
 # --- Página de Competição ---
 @app.route("/competicao")
@@ -536,17 +596,50 @@ def insights():
     stats = g.user.get('stats', {})
     history = stats.get('study_history', [])
     error_patterns = stats.get('error_patterns', {})
+    deck_errors = stats.get('deck_errors', {})
+    conquistas = g.user.get('conquistas', [])
     # Heatmap por hora do dia
     heat = [0]*24
+    tempo_total = 0
     for item in history:
         try:
             ts = int(item.get('ts', 0))
             from datetime import datetime
             hour = datetime.fromtimestamp(ts).hour
             heat[hour] += 1
+            tempo_total += 1  # cada item = 1 sessão/questão respondida
         except Exception:
             pass
-    return render_template('insights.html', heat=heat, error_patterns=error_patterns)
+    tempo_minutos = tempo_total  # supondo 1 min por questão
+    # Sugestões personalizadas
+    sugestoes = []
+    if tempo_minutos < 10:
+        sugestoes.append('Tente estudar um pouco mais para criar hábito!')
+    elif tempo_minutos < 60:
+        sugestoes.append('Ótimo começo! Que tal revisar seus cards favoritos?')
+    else:
+        sugestoes.append('Parabéns pela dedicação! Experimente criar novos baralhos ou desafiar um amigo.')
+    if error_patterns:
+        max_erro = max(error_patterns, key=error_patterns.get)
+        sugestoes.append(f"Atenção: você erra mais em respostas de tamanho {max_erro}. Reveja esses cards!")
+    # Ordena baralhos por quantidade de erros (maior -> menor)
+    try:
+        deck_errors_sorted = sorted(deck_errors.items(), key=lambda kv: kv[1].get('count', 0), reverse=True)
+    except Exception:
+        deck_errors_sorted = list(deck_errors.items())
+
+    # Escolher um destino para "Estudar agora":
+    # 1) Se houver baralho com mais erros, sugerir estudar esse baralho
+    estudar_url = None
+    try:
+        if deck_errors_sorted:
+            worst_id, worst = deck_errors_sorted[0]
+            # Se o baralho é próprio, direciona para estudar
+            estudar_url = f"/estudar/{worst_id}"
+    except Exception:
+        estudar_url = None
+
+    return render_template('insights.html', heat=heat, error_patterns=error_patterns, conquistas=conquistas, tempo_minutos=tempo_minutos, sugestoes=sugestoes, history=history, deck_errors=deck_errors, deck_errors_sorted=deck_errors_sorted, estudar_url=estudar_url)
 
 @app.route("/meus_baralhos")
 @login_required
@@ -1377,7 +1470,8 @@ def iniciar_desafio():
                     "id": card["id"],
                     "frente": card["frente"],
                     "verso": card["verso"],
-                    "baralho": baralho["nome"]
+                    "baralho": baralho["nome"],
+                    "baralho_id": baralho_id
                 })
 
     if not todas_as_perguntas:
@@ -1442,21 +1536,32 @@ def responder_desafio():
     except Exception:
         pass
 
-    # Log leve de estatísticas do estudo
+    # Log detalhado de estatísticas do estudo
     try:
         stats = g.user.setdefault('stats', {})
         # Histórico de respostas
         h = stats.setdefault('study_history', [])
-        h.append({
+        # tenta capturar metadados do card atual para insights
+        meta = {
             'ts': agora_timestamp(),
             'card_id': card_id,
-            'acertou': bool(acertou)
-        })
+            'acertou': bool(acertou),
+            'frente': card_atual.get('frente'),
+            'verso': card_atual.get('verso'),
+            'baralho': card_atual.get('baralho'),
+            'baralho_id': card_atual.get('baralho_id')
+        }
+        h.append(meta)
         # Padrões de erro simples por tamanho de resposta
         if not acertou:
             patt = stats.setdefault('error_patterns', {})
             key = str(min(50, max(1, len(resposta_user))))
             patt[key] = patt.get(key, 0) + 1
+            # também agregação por baralho para erros
+            deck_err = stats.setdefault('deck_errors', {})
+            deck_key = card_atual.get('baralho_id') or card_atual.get('baralho') or 'desconhecido'
+            deck_rec = deck_err.setdefault(deck_key, {'nome': card_atual.get('baralho') or deck_key, 'count': 0})
+            deck_rec['count'] = deck_rec.get('count', 0) + 1
         salvar_dados(USERS_PATH, usuarios)
     except Exception:
         pass
@@ -1471,17 +1576,22 @@ def responder_desafio():
 @app.route("/finalizar_desafio", methods=["POST"])
 @login_required
 def finalizar_desafio():
+
     if request.is_json:
         data = request.get_json()
         acertos = int(data.get("acertos", 0))
         erros = int(data.get("erros", 0))
         pontos = int(data.get("pontos", 0))
         respostas = data.get("respostas", [])
+        tempo_total = int(data.get("tempo_total", 0))
+        competicao_id = data.get("competicao_id")
     else:
         acertos = int(request.form.get("acertos", 0))
         erros = int(request.form.get("erros", 0))
         pontos = int(request.form.get("pontos", 0))
         respostas = []
+        tempo_total = 0
+        competicao_id = None
 
     # Atualiza pontos do usuário
     g.user["points"] = g.user.get("points", 0) + pontos
@@ -1490,6 +1600,96 @@ def finalizar_desafio():
     total = acertos + erros
     porcentagem = round((acertos / total) * 100) if total > 0 else 0
 
+    # Se for competição, salvar resultado parcial e comparar
+    if competicao_id:
+        # Salva resultado parcial na sessão
+        session['competicao_result'] = {
+            'acertos': acertos,
+            'erros': erros,
+            'pontos': pontos,
+            'tempo_total': tempo_total,
+            'respostas': respostas,
+            'porcentagem': porcentagem
+        }
+        # Buscar resultado do outro jogador
+        user_id = g.user['id']
+        comp = None
+        for uid, user in usuarios.items():
+            for c in user.get('competicoes', []):
+                if c.get('id') == competicao_id:
+                    comp = c
+                    break
+        if not comp:
+            flash('Competição não encontrada.', 'danger')
+            return redirect(url_for('pagina_competicao'))
+        # Salvar resultado no objeto competição
+        if 'resultados' not in comp:
+            comp['resultados'] = {}
+        comp['resultados'][user_id] = {
+            'acertos': acertos,
+            'erros': erros,
+            'pontos': pontos,
+            'tempo_total': tempo_total,
+            'porcentagem': porcentagem,
+            'nome': g.user.get('nome', user_id)
+        }
+        salvar_dados(USERS_PATH, usuarios)
+        # Se ambos finalizaram, comparar e mostrar resultado
+        user1 = comp.get('user1')
+        user2 = comp.get('user2')
+        res1 = comp['resultados'].get(user1)
+        res2 = comp['resultados'].get(user2)
+        vencedor = None
+        empate = False
+        if res1 and res2:
+            if res1['pontos'] > res2['pontos']:
+                vencedor = user1
+            elif res2['pontos'] > res1['pontos']:
+                vencedor = user2
+            else:
+                # Desempate por tempo
+                if res1['tempo_total'] < res2['tempo_total']:
+                    vencedor = user1
+                elif res2['tempo_total'] < res1['tempo_total']:
+                    vencedor = user2
+                else:
+                    empate = True
+            comp['status'] = 'finalizada'
+            salvar_dados(USERS_PATH, usuarios)
+            # Registrar atividade
+            try:
+                from feed import registrar_atividade
+                if empate:
+                    registrar_atividade('resultado', user1, f'Empate na competição!')
+                    registrar_atividade('resultado', user2, f'Empate na competição!')
+                else:
+                    nome_vencedor = usuarios.get(vencedor, {}).get('nome', vencedor)
+                    nome_perdedor = usuarios.get(user1 if vencedor==user2 else user2, {}).get('nome', user1 if vencedor==user2 else user2)
+                    registrar_atividade('resultado', vencedor, f'{nome_vencedor} venceu {nome_perdedor} em uma competição!')
+            except Exception:
+                pass
+            resultado = {
+                'acertos': acertos,
+                'erros': erros,
+                'porcentagem': porcentagem,
+                'pontos_ganhos': pontos,
+                'respostas': respostas,
+                'vencedor': vencedor,
+                'empate': empate,
+                'meu_id': user_id,
+                'user1': res1,
+                'user2': res2
+            }
+            session.pop("desafio", None)
+            return render_template("resultado_desafio.html", resultado=resultado, competicao=True)
+        else:
+            # Espera o outro jogador terminar
+            return render_template("resultado_desafio.html", resultado={
+                'aguardando': True,
+                'meu_id': user_id
+            }, competicao=True)
+
+    # Desafio normal
     resultado = {
         "acertos": acertos,
         "erros": erros,

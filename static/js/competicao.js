@@ -137,7 +137,11 @@ function aceitarDesafio(id) {
     body: JSON.stringify({ comp_id: id })
   }).then(r => r.json()).then(data => {
     mostrarMensagem(data.msg || 'Competição aceita!', 'success');
-    atualizarDesafios();
+    if (data.redirect) {
+      setTimeout(() => { window.location.href = data.redirect; }, 1200);
+    } else {
+      atualizarDesafios();
+    }
   }).catch(() => mostrarMensagem('Erro ao aceitar.', 'danger'));
 }
 

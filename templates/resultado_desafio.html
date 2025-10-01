@@ -2,13 +2,157 @@
 {% block title %}Resultado do Desafio - FlashStudy{% endblock %}
 
 {% block content %}
+<style>
+    .resultado-modern-container {
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 70vh;
+        background: linear-gradient(120deg, #232946 0%, #16161a 100%);
+        gap: 32px;
+        display: flex;
+        flex-wrap: wrap;
+        padding: 32px 0;
+    }
+    .resultado-card {
+        background: #232946;
+        border-radius: 18px;
+        box-shadow: 0 8px 32px rgba(60, 60, 120, 0.18);
+        padding: 40px 32px;
+        max-width: 400px;
+        width: 100%;
+        text-align: center;
+        animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1.000);
+        color: #eaeaea;
+    }
+    .resultado-header h2 {
+        font-size: 2.2rem;
+        color: #8b5cf6;
+        margin-bottom: 0.5rem;
+    }
+    .resultado-header p {
+        color: #b8c1ec;
+        margin-bottom: 1.5rem;
+    }
+    .resultado-trofeu {
+        width: 64px;
+        margin-bottom: 16px;
+        animation: bounce 1.2s infinite alternate;
+    }
+    .resultado-metricas {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-bottom: 2rem;
+    }
+    .resultado-metrica {
+        background: #16161a;
+        border-radius: 10px;
+        padding: 18px 0;
+        box-shadow: 0 2px 8px rgba(60,60,120,0.10);
+    }
+    .resultado-label {
+        display: block;
+        color: #b8c1ec;
+        font-size: 1rem;
+        margin-bottom: 6px;
+    }
+    .resultado-valor {
+        font-size: 1.6rem;
+        font-weight: 700;
+    }
+    .resultado-valor.acertos { color: #22c55e; }
+    .resultado-valor.erros { color: #ef4444; }
+    .resultado-valor.aproveitamento { color: #6366f1; }
+    .resultado-valor.pontos { color: #eab308; }
+    .resultado-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        margin-top: 16px;
+    }
+    .resultado-revisao {
+        background: #232946;
+        border-radius: 18px;
+        box-shadow: 0 8px 32px rgba(60, 60, 120, 0.18);
+        padding: 32px 24px;
+        max-width: 420px;
+        width: 100%;
+        margin-top: 0;
+        animation: fadeInUp 1.2s cubic-bezier(.39,.575,.565,1.000);
+        color: #eaeaea;
+    }
+    .revisao-titulo {
+        font-size: 1.3rem;
+        color: #8b5cf6;
+        margin-bottom: 18px;
+        text-align: left;
+    }
+    .revisao-lista {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+    .revisao-item {
+        background: #16161a;
+        border-radius: 10px;
+        padding: 16px 14px;
+        box-shadow: 0 2px 8px rgba(60,60,120,0.10);
+        border-left: 6px solid #6366f1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .revisao-item.acerto { border-left-color: #22c55e; }
+    .revisao-item.erro { border-left-color: #ef4444; }
+    .revisao-status {
+        font-size: 1.2rem;
+        margin-bottom: 4px;
+    }
+    .icon-acerto { color: #22c55e; font-size: 1.3rem; }
+    .icon-erro { color: #ef4444; font-size: 1.3rem; }
+    .revisao-pergunta { font-weight: 600; color: #eaeaea; }
+    .revisao-resposta { color: #b8c1ec; }
+    .revisao-correta { color: #b8c1ec; }
+    .revisao-user { color: #fbbf24; font-weight: 600; }
+    .revisao-certa { color: #22d3ee; font-weight: 600; }
+    @keyframes fadeInUp {
+        0% { opacity: 0; transform: translateY(40px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bounce {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-12px); }
+    }
+</style>
 <div class="resultado-modern-container">
     <div class="resultado-card">
         <div class="resultado-header">
             <img src="/static/uploads/USROF2PCSB_936778f8_Icone_app.png" alt="Troféu" class="resultado-trofeu">
-            <h2>Parabéns!</h2>
-            <p>Você concluiu o desafio 🎉</p>
+            {% if competicao %}
+                {% if resultado.aguardando %}
+                    <h2>Aguardando o outro jogador...</h2>
+                    <p>Seu resultado foi registrado. Assim que seu amigo terminar, o resultado será exibido!</p>
+                    <script>
+                    setTimeout(()=>window.location.reload(), 4000);
+                    </script>
+                {% else %}
+                    {% if resultado.empate %}
+                        <h2>Empate!</h2>
+                        <p>Ambos terminaram com a mesma pontuação e tempo.</p>
+                    {% elif resultado.vencedor == resultado.meu_id %}
+                        <h2>Você venceu! 🏆</h2>
+                        <p>Parabéns, você foi mais rápido ou pontuou mais!</p>
+                    {% else %}
+                        <h2>Você perdeu!</h2>
+                        <p>Seu amigo foi mais rápido ou pontuou mais.</p>
+                    {% endif %}
+                {% endif %}
+            {% else %}
+                <h2>Parabéns!</h2>
+                <p>Você concluiu o desafio 🎉</p>
+            {% endif %}
         </div>
+        {% if not resultado.aguardando %}
         <div class="resultado-metricas">
             <div class="resultado-metrica">
                 <span class="resultado-label">Acertos</span>
@@ -26,12 +170,24 @@
                 <span class="resultado-label">Pontos</span>
                 <span class="resultado-valor pontos">+{{ resultado.pontos_ganhos }}</span>
             </div>
+            {% if competicao and resultado.user1 and resultado.user2 %}
+            <div class="resultado-metrica">
+                <span class="resultado-label">Tempo (você)</span>
+                <span class="resultado-valor">{{ resultado.user1.tempo_total if resultado.meu_id==resultado.user1.nome else resultado.user2.tempo_total }}s</span>
+            </div>
+            <div class="resultado-metrica">
+                <span class="resultado-label">Tempo (amigo)</span>
+                <span class="resultado-valor">{{ resultado.user2.tempo_total if resultado.meu_id==resultado.user1.nome else resultado.user1.tempo_total }}s</span>
+            </div>
+            {% endif %}
         </div>
+        {% endif %}
         <div class="resultado-actions">
             <a href="{{ url_for('desafio') }}" class="btn">🔄 Novo Desafio</a>
             <a href="{{ url_for('home') }}" class="btn ghost">🏠 Início</a>
         </div>
     </div>
+    {% if not resultado.aguardando %}
     <div class="resultado-revisao">
         <h3 class="revisao-titulo">📝 Revisão das Respostas</h3>
         <div class="revisao-lista">
@@ -47,134 +203,13 @@
                 {% if resposta.nome %}
                 <div class="revisao-nome"><strong>Pergunta:</strong> {{ resposta.nome }}</div>
                 {% endif %}
-                <div class="revisao-pergunta"><strong>Enunciado:</strong> {{ resposta.pergunta }}</div>
+                <div class="revisao-pergunta"><strong>Enunciado:</strong> {{ resposta.frente or resposta.pergunta }}</div>
                 <div class="revisao-resposta"><strong>Sua resposta:</strong> <span class="revisao-user">{{ resposta.resposta_usuario or '(não respondeu)' }}</span></div>
                 <div class="revisao-correta"><strong>Resposta correta:</strong> <span class="revisao-certa">{{ resposta.resposta_correta }}</span></div>
             </div>
             {% endfor %}
         </div>
     </div>
+    {% endif %}
 </div>
-<style>
-/* Tema escuro confortável */
-.resultado-modern-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 70vh;
-    background: linear-gradient(120deg, #232946 0%, #16161a 100%);
-    gap: 32px;
-}
-.resultado-card {
-    background: #232946;
-    border-radius: 18px;
-    box-shadow: 0 8px 32px rgba(60, 60, 120, 0.18);
-    padding: 40px 32px;
-    max-width: 400px;
-    width: 100%;
-    text-align: center;
-    animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1.000);
-    color: #eaeaea;
-}
-.resultado-header h2 {
-    font-size: 2.2rem;
-    color: #8b5cf6;
-    margin-bottom: 0.5rem;
-}
-.resultado-header p {
-    color: #b8c1ec;
-    margin-bottom: 1.5rem;
-}
-.resultado-trofeu {
-    width: 64px;
-    margin-bottom: 16px;
-    animation: bounce 1.2s infinite alternate;
-}
-.resultado-metricas {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 18px;
-    margin-bottom: 2rem;
-}
-.resultado-metrica {
-    background: #16161a;
-    border-radius: 10px;
-    padding: 18px 0;
-    box-shadow: 0 2px 8px rgba(60,60,120,0.10);
-}
-.resultado-label {
-    display: block;
-    color: #b8c1ec;
-    font-size: 1rem;
-    margin-bottom: 6px;
-}
-.resultado-valor {
-    font-size: 1.6rem;
-    font-weight: 700;
-}
-.resultado-valor.acertos { color: #22c55e; }
-.resultado-valor.erros { color: #ef4444; }
-.resultado-valor.aproveitamento { color: #6366f1; }
-.resultado-valor.pontos { color: #eab308; }
-.resultado-actions {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    margin-top: 16px;
-}
-.resultado-revisao {
-    background: #232946;
-    border-radius: 18px;
-    box-shadow: 0 8px 32px rgba(60, 60, 120, 0.18);
-    padding: 32px 24px;
-    max-width: 420px;
-    width: 100%;
-    margin-top: 0;
-    animation: fadeInUp 1.2s cubic-bezier(.39,.575,.565,1.000);
-    color: #eaeaea;
-}
-.revisao-titulo {
-    font-size: 1.3rem;
-    color: #8b5cf6;
-    margin-bottom: 18px;
-    text-align: left;
-}
-.revisao-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-.revisao-item {
-    background: #16161a;
-    border-radius: 10px;
-    padding: 16px 14px;
-    box-shadow: 0 2px 8px rgba(60,60,120,0.10);
-    border-left: 6px solid #6366f1;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.revisao-item.acerto { border-left-color: #22c55e; }
-.revisao-item.erro { border-left-color: #ef4444; }
-.revisao-status {
-    font-size: 1.2rem;
-    margin-bottom: 4px;
-}
-.icon-acerto { color: #22c55e; font-size: 1.3rem; }
-.icon-erro { color: #ef4444; font-size: 1.3rem; }
-.revisao-pergunta { font-weight: 600; color: #eaeaea; }
-.revisao-resposta { color: #b8c1ec; }
-.revisao-correta { color: #b8c1ec; }
-.revisao-user { color: #fbbf24; font-weight: 600; }
-.revisao-certa { color: #22d3ee; font-weight: 600; }
-@keyframes fadeInUp {
-    0% { opacity: 0; transform: translateY(40px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
-@keyframes bounce {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-12px); }
-}
-</style>
 {% endblock %}

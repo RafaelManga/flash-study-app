@@ -203,6 +203,7 @@ function proximaQuestao() {
 }
 
 function finalizarDesafio() {
+    const tempoTotal = Math.round((Date.now() - desafioData.inicio * 1000) / 1000); // segundos
     fetch('/finalizar_desafio', {
         method: 'POST',
         headers: {
@@ -212,7 +213,9 @@ function finalizarDesafio() {
             acertos: acertos,
             erros: erros,
             pontos: pontos,
-            respostas: respostasUsuario
+            respostas: respostasUsuario,
+            tempo_total: tempoTotal,
+            competicao_id: desafioData.competicao_id || null
         })
     })
     .then(response => response.text())

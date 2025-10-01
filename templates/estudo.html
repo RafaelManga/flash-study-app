@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Estudo Personalizado - FlashStudy{% endblock %}
+{% block content %}
+<div class="card" style="max-width:800px;margin:0 auto;margin-top:24px;">
+  <h2 style="margin-bottom:16px;">📚 Sessão de Estudo</h2>
+  {% if cards and cards|length > 0 %}
+    <ul style="list-style:none;padding:0;">
+      {% for card in cards %}
+      <li style="background:#f8fafc;border-radius:10px;padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 4px #0001;">
+        <div style="font-weight:600;color:#2563eb;font-size:1.1em;">{{ card.frente or card.pergunta }}</div>
+        <div style="color:#444;margin-top:8px;">Resposta: <span style="color:#059669;font-weight:500;">{{ card.verso or card.resposta }}</span></div>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div style="color:#888;">Nenhum card recomendado para estudo no momento.</div>
+  {% endif %}
+</div>
+{% endblock %}

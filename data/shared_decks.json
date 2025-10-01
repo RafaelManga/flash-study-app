@@ -10,7 +10,37 @@
       }
     ],
     "owner": "USRSZD0XV8",
-    "members": [],
+    "members": [
+      "USRWRPWIHU"
+    ],
     "created_at": 1758813443
+  },
+  "shared_matematica_b9f1": {
+    "nome": "matematica",
+    "cor": "#ef4444",
+    "cards": [
+      {
+        "id": "4197dc15-cf8f-4ce3-91ee-5a3af27fb81f",
+        "frente": "2 + 2",
+        "verso": "4"
+      },
+      {
+        "id": "0f6ddaca-dc05-4e23-8e6b-fb1ecce6902b",
+        "frente": "22",
+        "verso": "2"
+      }
+    ],
+    "owner": "USR6PYOPNW",
+    "members": [
+      "USRY0K3BHX"
+    ],
+    "created_at": 1758835640,
+    "permissoes": {
+      "USRY0K3BHX": {
+        "ler": true,
+        "criar": false,
+        "deletar": false
+      }
+    }
   }
 }

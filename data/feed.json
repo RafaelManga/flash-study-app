@@ -6,13 +6,25 @@
     "data": 1758813443.0827596,
     "likes": [
       "USRSZD0XV8",
-      "USRWRPWIHU"
+      "USRWRPWIHU",
+      "USR6PYOPNW",
+      "USRY0K3BHX"
     ],
     "comentarios": [
       {
         "usuario_id": "USRSZD0XV8",
         "texto": "ai sim",
         "data": 1758813681.977942
+      },
+      {
+        "usuario_id": "USR6PYOPNW",
+        "texto": "ai sim",
+        "data": 1758835721.649985
+      },
+      {
+        "usuario_id": "USR6PYOPNW",
+        "texto": "ai sim",
+        "data": 1758835973.9207802
       }
     ]
   },
@@ -23,7 +35,8 @@
     "data": 1758813701.601105,
     "likes": [
       "USRSZD0XV8",
-      "USRWRPWIHU"
+      "USRWRPWIHU",
+      "USR6PYOPNW"
     ],
     "comentarios": [
       {
@@ -35,6 +48,11 @@
         "usuario_id": "USRWRPWIHU",
         "texto": "Fala irmao",
         "data": 1758834520.1203172
+      },
+      {
+        "usuario_id": "USR6PYOPNW",
+        "texto": "Fala irmao",
+        "data": 1758835980.1376119
       }
     ]
   },
@@ -59,7 +77,9 @@
     "usuario_id": "USRSZD0XV8",
     "descricao": "Você enviou um pedido de amizade para Grey",
     "data": 1758822110.1340191,
-    "likes": [],
+    "likes": [
+      "USRY0K3BHX"
+    ],
     "comentarios": []
   },
   {
@@ -67,7 +87,9 @@
     "usuario_id": "USRWRPWIHU",
     "descricao": "Você adicionou Rafael como amigo",
     "data": 1758822130.2421339,
-    "likes": [],
+    "likes": [
+      "USRY0K3BHX"
+    ],
     "comentarios": []
   },
   {
@@ -83,6 +105,534 @@
     "usuario_id": "USRWRPWIHU",
     "descricao": "Desbloqueou a conquista 🤝 Primeiro Amigo – Adicionou seu primeiro amigo",
     "data": 1758822130.2780914,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "criou_baralho",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Criou o baralho 'matematica'",
+    "data": 1758835278.2957041,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "criou_card",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Criou um card no baralho 'matematica'",
+    "data": 1758835278.3944952,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Desbloqueou a conquista 🧠 Primeiro Card – Criou seu primeiro flashcard",
+    "data": 1758835278.4525616,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758835287.458778,
+    "likes": [
+      "USR6PYOPNW"
+    ],
+    "comentarios": [
+      {
+        "usuario_id": "USR6PYOPNW",
+        "texto": "ai sim",
+        "data": 1758836000.494095
+      }
+    ]
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758835289.6431649,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758835290.6803565,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758835304.1609943,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758835330.0609424,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758835333.3399642,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "criou_card",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Criou um card no baralho 'matematica'",
+    "data": 1758835354.7187984,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "amizade",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Você enviou um pedido de amizade para jack",
+    "data": 1758835507.951798,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "amizade",
+    "usuario_id": "USRY0K3BHX",
+    "descricao": "Você adicionou Pay como amigo",
+    "data": 1758835518.4344113,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "amizade",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Você adicionou jack como amigo",
+    "data": 1758835518.457163,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRY0K3BHX",
+    "descricao": "Desbloqueou a conquista 🤝 Primeiro Amigo – Adicionou seu primeiro amigo",
+    "data": 1758835518.5070481,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "compartilhar",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Você compartilhou o baralho 'matematica' com jack",
+    "data": 1758835641.2263355,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "compartilhar",
+    "usuario_id": "USRY0K3BHX",
+    "descricao": "Você aceitou o convite para o baralho 'matematica'",
+    "data": 1758835653.638597,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRY0K3BHX",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758835703.2268248,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRY0K3BHX",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758835704.576661,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Enviou um desafio para jack (deck matematica_b9f1)",
+    "data": 1758835874.7672842,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRY0K3BHX",
+    "descricao": "Aceitou um desafio!",
+    "data": 1758835880.7923732,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Finalizou um desafio: 2 acertos, 0 erros, 20 pontos",
+    "data": 1758835941.4541755,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Finalizou um desafio: 2 acertos, 0 erros, 20 pontos",
+    "data": 1758836837.2845316,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Enviou um desafio para jack (deck matematica_b9f1)",
+    "data": 1758836938.6610057,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRY0K3BHX",
+    "descricao": "Aceitou um desafio!",
+    "data": 1758836945.2971094,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USR6PYOPNW",
+    "descricao": "Finalizou um desafio: 0 acertos, 2 erros, 0 pontos",
+    "data": 1758904553.858617,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Desbloqueou a conquista ⚡ Resposta Relâmpago – Respondeu em menos de 2 segundos",
+    "data": 1758907196.733456,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Finalizou um desafio: 1 acertos, 0 erros, 10 pontos",
+    "data": 1758907197.5439441,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Finalizou um desafio: 1 acertos, 0 erros, 10 pontos",
+    "data": 1758907516.8683548,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Finalizou um desafio: 1 acertos, 0 erros, 10 pontos",
+    "data": 1758907757.1591995,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "mensagem",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Enviou uma mensagem para USRWRPWIHU",
+    "data": 1758907916.4015782,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "mensagem",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Enviou uma mensagem para USRWRPWIHU",
+    "data": 1758907916.432355,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "mensagem",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Enviou uma mensagem para USRWRPWIHU",
+    "data": 1758907922.5447097,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "criou_baralho",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Criou o baralho 'rewrw'",
+    "data": 1758908274.7308102,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "criou_card",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Criou um card no baralho 'rewrw'",
+    "data": 1758908274.8457036,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Desbloqueou a conquista 🧠 Primeiro Card – Criou seu primeiro flashcard",
+    "data": 1758908274.861021,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758908277.9765575,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758908287.8738601,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Finalizou um desafio: 0 acertos, 1 erros, 0 pontos",
+    "data": 1758908988.385104,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Desbloqueou a conquista 🔁 Revisador Profissional – Revisou o mesmo baralho 5 vezes",
+    "data": 1758909537.088154,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Finalizou um desafio: 0 acertos, 1 erros, 0 pontos",
+    "data": 1758909590.2809243,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Finalizou um desafio: 0 acertos, 1 erros, 0 pontos",
+    "data": 1758909598.0979927,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758975205.4737794,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "compartilhar",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Você compartilhou o baralho 'matematica' com Grey",
+    "data": 1758975233.1802218,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Finalizou um desafio: 0 acertos, 1 erros, 0 pontos",
+    "data": 1758975292.560953,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Enviou um desafio para Grey (deck matematica_fbbc)",
+    "data": 1758975424.8917816,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "criou_baralho",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Criou o baralho 'fwrw'",
+    "data": 1758975514.6275954,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "criou_card",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Criou um card no baralho 'fwrw'",
+    "data": 1758975514.630616,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Desbloqueou a conquista 🧠 Primeiro Card – Criou seu primeiro flashcard",
+    "data": 1758975514.643919,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "compartilhar",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Você aceitou o convite para o baralho 'matematica'",
+    "data": 1758975537.0898907,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Desbloqueou a conquista 🧃 Amigo da Onça – Recusou 3 convites seguidos",
+    "data": 1758975559.5888598,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Aceitou um desafio!",
+    "data": 1758975564.1550133,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Finalizou um desafio: 0 acertos, 1 erros, 0 pontos",
+    "data": 1758975658.9604278,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "criou_baralho",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Criou o baralho 'testt'",
+    "data": 1758975745.263542,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "criou_card",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Criou um card no baralho 'testt'",
+    "data": 1758975745.2692418,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Finalizou um desafio: 1 acertos, 0 erros, 10 pontos",
+    "data": 1758975822.459476,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Finalizou um desafio: 0 acertos, 1 erros, 0 pontos",
+    "data": 1758975847.9215422,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "criou_card",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Criou um card no baralho 'fwrw'",
+    "data": 1758975915.1814795,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Finalizou um desafio: 1 acertos, 1 erros, 10 pontos",
+    "data": 1758975946.5409486,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "mensagem",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Enviou uma mensagem para USRSZD0XV8",
+    "data": 1758976053.6038249,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "mensagem",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Enviou uma mensagem para USRSZD0XV8",
+    "data": 1758976053.6038249,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "mensagem",
+    "usuario_id": "USRWRPWIHU",
+    "descricao": "Enviou uma mensagem para USRSZD0XV8",
+    "data": 1758976187.7912078,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758976641.7823727,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758976647.4658287,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "conquista",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Atualizou favoritos de estudo",
+    "data": 1758976658.007836,
+    "likes": [],
+    "comentarios": []
+  },
+  {
+    "tipo": "desafio",
+    "usuario_id": "USRSZD0XV8",
+    "descricao": "Finalizou um desafio: 0 acertos, 1 erros, 0 pontos",
+    "data": 1758976685.4605062,
     "likes": [],
     "comentarios": []
   }
