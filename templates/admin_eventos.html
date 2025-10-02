@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Eventos e Campanhas - Admin{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 16px;">🎉 Eventos e Campanhas</h1>
+    <p style="color: var(--muted);">Crie desafios temáticos e campanhas de estudo</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+    <!-- Criar Evento -->
+    <div class="card">
+        <h2 style="margin-bottom: 20px;">➕ Criar Novo Evento</h2>
+        
+        <form method="POST">
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Título do Evento *</label>
+                <input type="text" name="titulo" class="form-control" required 
+                       placeholder="Ex: Desafio de Matemática">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Descrição *</label>
+                <textarea name="descricao" class="form-control" rows="4" required
+                          placeholder="Descreva o evento..."></textarea>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                <div>
+                    <label class="form-label">Data de Início *</label>
+                    <input type="date" name="data_inicio" class="form-control" required>
+                </div>
+                <div>
+                    <label class="form-label">Data de Fim *</label>
+                    <input type="date" name="data_fim" class="form-control" required>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Tipo de Evento</label>
+                <select name="tipo" class="form-control">
+                    <option value="desafio">🎯 Desafio Temático</option>
+                    <option value="campanha">📚 Campanha de Estudo</option>
+                    <option value="competicao">🏆 Competição</option>
+                    <option value="especial">⭐ Evento Especial</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Recompensa (pontos)</label>
+                <input type="number" name="recompensa" class="form-control" 
+                       value="100" min="0" step="10">
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                🎉 Criar Evento
+            </button>
+        </form>
+    </div>
+    
+    <!-- Lista de Eventos -->
+    <div>
+        <div class="card">
+            <h2 style="margin-bottom: 20px;">📋 Eventos Ativos</h2>
+            
+            {% if eventos %}
+                <div style="max-height: 600px; overflow-y: auto;">
+                    {% for evento in eventos %}
+                    <div style="padding: 16px; border: 2px solid var(--border); border-radius: 8px; margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <div>
+                                {% if evento.tipo == 'desafio' %}
+                                    <span class="badge" style="background: #3b82f6;">🎯 Desafio</span>
+                                {% elif evento.tipo == 'campanha' %}
+                                    <span class="badge" style="background: #8b5cf6;">📚 Campanha</span>
+                                {% elif evento.tipo == 'competicao' %}
+                                    <span class="badge" style="background: #f59e0b;">🏆 Competição</span>
+                                {% else %}
+                                    <span class="badge" style="background: #10b981;">⭐ Especial</span>
+                                {% endif %}
+                            </div>
+                            
+                            {% if evento.ativo %}
+                                <span class="badge" style="background: #10b981;">✅ Ativo</span>
+                            {% else %}
+                                <span class="badge" style="background: #6b7280;">🔒 Encerrado</span>
+                            {% endif %}
+                        </div>
+                        
+                        <h3 style="margin-bottom: 8px;">{{ evento.titulo }}</h3>
+                        <p style="color: var(--muted); margin-bottom: 12px; line-height: 1.5;">
+                            {{ evento.descricao }}
+                        </p>
+                        
+                        <div style="display: flex; gap: 16px; margin-bottom: 12px; font-size: 0.9rem; color: var(--muted);">
+                            <span>📅 {{ evento.data_inicio }} - {{ evento.data_fim }}</span>
+                            <span>⭐ {{ evento.recompensa }} pts</span>
+                        </div>
+                        
+                        <div style="display: flex; gap: 8px;">
+                            <form method="POST" action="{{ url_for('admin_excluir_evento', evento_id=evento.id) }}" style="flex: 1;">
+                                <button type="submit" class="btn" style="width: 100%; background: #ef4444; color: white;"
+                                        onclick="return confirm('Tem certeza que deseja excluir este evento?')">
+                                    🗑️ Excluir
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 40px 20px; color: var(--muted);">
+                    <div style="font-size: 3rem; margin-bottom: 12px; opacity: 0.5;">📅</div>
+                    <p>Nenhum evento criado ainda</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

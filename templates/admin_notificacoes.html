@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Notificações - Admin{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 16px;">📢 Sistema de Notificações</h1>
+    <p style="color: var(--muted);">Envie avisos e comunicados para os usuários</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+    <!-- Enviar Notificação -->
+    <div class="card">
+        <h2 style="margin-bottom: 20px;">📤 Enviar Notificação</h2>
+        
+        <form method="POST">
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Destinatários *</label>
+                <select name="destinatarios" class="form-control" required>
+                    <option value="todos">👥 Todos os usuários</option>
+                    <option value="admins">🛡️ Apenas administradores</option>
+                    <option value="ativos">🟢 Usuários ativos (últimos 7 dias)</option>
+                    <option value="inativos">⚫ Usuários inativos (+30 dias)</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Tipo de Notificação</label>
+                <select name="tipo" class="form-control">
+                    <option value="info">ℹ️ Informação</option>
+                    <option value="aviso">⚠️ Aviso</option>
+                    <option value="sucesso">✅ Sucesso</option>
+                    <option value="urgente">🚨 Urgente</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Título *</label>
+                <input type="text" name="titulo" class="form-control" required 
+                       placeholder="Ex: Nova funcionalidade disponível!">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Mensagem *</label>
+                <textarea name="mensagem" class="form-control" rows="6" required
+                          placeholder="Digite a mensagem da notificação..."></textarea>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Link (opcional)</label>
+                <input type="text" name="link" class="form-control" 
+                       placeholder="/feed ou URL externa">
+                <p style="color: var(--muted); font-size: 0.9rem; margin-top: 8px;">
+                    Deixe em branco se não houver link
+                </p>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                📢 Enviar Notificação
+            </button>
+        </form>
+    </div>
+    
+    <!-- Histórico de Notificações -->
+    <div>
+        <div class="card">
+            <h2 style="margin-bottom: 20px;">📜 Histórico de Notificações</h2>
+            
+            {% if notificacoes %}
+                <div style="max-height: 600px; overflow-y: auto;">
+                    {% for notif in notificacoes %}
+                    <div style="padding: 16px; border-bottom: 1px solid var(--border); margin-bottom: 12px;">
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            {% if notif.tipo == 'info' %}
+                                <span class="badge" style="background: #3b82f6;">ℹ️</span>
+                            {% elif notif.tipo == 'aviso' %}
+                                <span class="badge" style="background: #f59e0b;">⚠️</span>
+                            {% elif notif.tipo == 'sucesso' %}
+                                <span class="badge" style="background: #10b981;">✅</span>
+                            {% else %}
+                                <span class="badge" style="background: #ef4444;">🚨</span>
+                            {% endif %}
+                            
+                            <span style="color: var(--muted); font-size: 0.9rem;">
+                                {{ notif.data|datetime('%d/%m/%Y %H:%M') }}
+                            </span>
+                        </div>
+                        
+                        <h4 style="margin-bottom: 8px;">{{ notif.titulo }}</h4>
+                        <p style="color: var(--muted); margin-bottom: 8px; line-height: 1.5;">
+                            {{ notif.mensagem }}
+                        </p>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--muted); font-size: 0.9rem;">
+                                👥 {{ notif.destinatarios_texto }}
+                            </span>
+                            
+                            {% if notif.link %}
+                            <a href="{{ notif.link }}" class="btn btn-secondary" style="font-size: 0.9rem; padding: 4px 12px;">
+                                🔗 Link
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 40px 20px; color: var(--muted);">
+                    <div style="font-size: 3rem; margin-bottom: 12px; opacity: 0.5;">📭</div>
+                    <p>Nenhuma notificação enviada ainda</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Estatísticas -->
+        <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h3 style="margin-bottom: 16px;">📊 Estatísticas</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 4px;">{{ total_notificacoes }}</div>
+                    <div style="opacity: 0.9;">Total Enviadas</div>
+                </div>
+                <div>
+                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 4px;">{{ notificacoes_mes }}</div>
+                    <div style="opacity: 0.9;">Este Mês</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

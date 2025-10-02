@@ -120,6 +120,9 @@ BARALHOS_PATH = os.path.join(DATA_DIR, "baralhos.json")
 SHARED_DECKS_PATH = os.path.join(DATA_DIR, "shared_decks.json")
 FRIEND_REQUESTS_PATH = os.path.join(DATA_DIR, "friend_requests.json")
 DECK_INVITES_PATH = os.path.join(DATA_DIR, "deck_invites.json")
+RELATOS_PATH = os.path.join(DATA_DIR, "relatos.json")
+ADMIN_LOGS_PATH = os.path.join(DATA_DIR, "admin_logs.json")
+PLATAFORMA_CONFIG_PATH = os.path.join(DATA_DIR, "plataforma_config.json")
 
 # --- Criação de Pastas ---
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -150,6 +153,19 @@ baralhos = carregar_dados(BARALHOS_PATH, {})
 shared_decks = carregar_dados(SHARED_DECKS_PATH, {})
 friend_requests = carregar_dados(FRIEND_REQUESTS_PATH, {})
 deck_invites = carregar_dados(DECK_INVITES_PATH, {})
+relatos = carregar_dados(RELATOS_PATH, {})
+admin_logs = carregar_dados(ADMIN_LOGS_PATH, [])
+plataforma_config = carregar_dados(PLATAFORMA_CONFIG_PATH, {
+    "tema": {
+        "cor_primaria": "#3b82f6",
+        "cor_secundaria": "#8b5cf6",
+        "fonte_principal": "Inter, system-ui, sans-serif",
+        "banner_home": "",
+        "logo": ""
+    },
+    "eventos": [],
+    "notificacoes_globais": []
+})
 
 # --- Rota para listar desafios pendentes ---
 @app.route('/competicao/desafios')
@@ -277,6 +293,44 @@ def contar_notificacoes(user_id):
     pedidos_amizade = len(friend_requests.get(user_id, []))
     convites_baralho = len(deck_invites.get(user_id, []))
     return pedidos_amizade + convites_baralho
+
+
+def admin_required(f):
+    """Decorador para rotas que exigem privilégios de administrador"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Você precisa fazer login para acessar esta página.", "warning")
+            return redirect(url_for("login"))
+        
+        user_id = session["user_id"]
+        if user_id not in usuarios:
+            session.clear()
+            flash("Sessão inválida. Faça login novamente.", "danger")
+            return redirect(url_for("login"))
+        
+        user = usuarios[user_id]
+        if not user.get("is_admin", False):
+            flash("Acesso negado. Esta área é restrita a administradores.", "danger")
+            return redirect(url_for("home"))
+        
+        g.user = user
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def registrar_log_admin(admin_id, tipo, descricao, detalhes=""):
+    """Registra ação administrativa nos logs"""
+    admin_logs.append({
+        "id": str(uuid4()),
+        "admin_id": admin_id,
+        "admin_nome": usuarios[admin_id]["nome"],
+        "tipo": tipo,
+        "descricao": descricao,
+        "detalhes": detalhes,
+        "data": agora_timestamp()
+    })
+    salvar_dados(ADMIN_LOGS_PATH, admin_logs)
 
 
 # --- Decorador de Login ---
@@ -1469,6 +1523,14 @@ def heartbeat():
     g.user["last_seen"] = agora_timestamp()
     salvar_dados(USERS_PATH, usuarios)
     return jsonify({"status": "ok"})
+
+
+# --- Rotas Administrativas ---
+from admin_routes import init_admin_routes
+init_admin_routes(app, usuarios, relatos, admin_logs, plataforma_config, baralhos, shared_decks,
+                 agora_timestamp, salvar_dados, registrar_log_admin, usuario_online,
+                 RELATOS_PATH, ADMIN_LOGS_PATH, PLATAFORMA_CONFIG_PATH, USERS_PATH,
+                 UPLOAD_FOLDER, allowed_file)
 
 
 # --- Execução ---

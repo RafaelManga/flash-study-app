@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Gerenciar Relatos - Admin{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 16px;">📋 Gerenciar Relatos</h1>
+    <p style="color: var(--muted);">Visualize e responda relatos enviados pelos usuários</p>
+</div>
+
+<!-- Filtros -->
+<div class="card" style="margin-bottom: 30px;">
+    <form method="GET" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+        <select name="categoria" class="form-control" style="flex: 1; min-width: 150px;">
+            <option value="">Todas as Categorias</option>
+            <option value="bug" {% if request.args.get('categoria') == 'bug' %}selected{% endif %}>🐛 Bug</option>
+            <option value="sugestao" {% if request.args.get('categoria') == 'sugestao' %}selected{% endif %}>💡 Sugestão</option>
+            <option value="duvida" {% if request.args.get('categoria') == 'duvida' %}selected{% endif %}>❓ Dúvida</option>
+            <option value="feedback" {% if request.args.get('categoria') == 'feedback' %}selected{% endif %}>📝 Feedback</option>
+        </select>
+        
+        <select name="status" class="form-control" style="flex: 1; min-width: 150px;">
+            <option value="">Todos os Status</option>
+            <option value="pendente" {% if request.args.get('status') == 'pendente' %}selected{% endif %}>⏳ Pendente</option>
+            <option value="em_analise" {% if request.args.get('status') == 'em_analise' %}selected{% endif %}>🔍 Em Análise</option>
+            <option value="resolvido" {% if request.args.get('status') == 'resolvido' %}selected{% endif %}>✅ Resolvido</option>
+            <option value="ignorado" {% if request.args.get('status') == 'ignorado' %}selected{% endif %}>❌ Ignorado</option>
+        </select>
+        
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <a href="{{ url_for('admin_relatos') }}" class="btn btn-secondary">Limpar</a>
+    </form>
+</div>
+
+<!-- Lista de Relatos -->
+{% if relatos %}
+    {% for relato in relatos %}
+    <div class="card" style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+            <div style="flex: 1;">
+                <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 8px;">
+                    {% if relato.categoria == 'bug' %}
+                        <span class="badge" style="background: #ef4444;">🐛 Bug</span>
+                    {% elif relato.categoria == 'sugestao' %}
+                        <span class="badge" style="background: #3b82f6;">💡 Sugestão</span>
+                    {% elif relato.categoria == 'duvida' %}
+                        <span class="badge" style="background: #f59e0b;">❓ Dúvida</span>
+                    {% else %}
+                        <span class="badge" style="background: #8b5cf6;">📝 Feedback</span>
+                    {% endif %}
+                    
+                    {% if relato.status == 'pendente' %}
+                        <span class="badge" style="background: #6b7280;">⏳ Pendente</span>
+                    {% elif relato.status == 'em_analise' %}
+                        <span class="badge" style="background: #3b82f6;">🔍 Em Análise</span>
+                    {% elif relato.status == 'resolvido' %}
+                        <span class="badge" style="background: #10b981;">✅ Resolvido</span>
+                    {% else %}
+                        <span class="badge" style="background: #ef4444;">❌ Ignorado</span>
+                    {% endif %}
+                </div>
+                
+                <p style="color: var(--muted); margin-bottom: 4px;">
+                    <strong>{{ relato.usuario_nome }}</strong> ({{ relato.usuario_email }})
+                </p>
+                <p style="color: var(--muted); font-size: 0.9rem;">
+                    {{ relato.data|datetime('%d/%m/%Y %H:%M') }}
+                </p>
+            </div>
+            
+            <div style="text-align: right;">
+                <span style="color: var(--muted); font-size: 0.9rem;">ID: {{ relato.id }}</span>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+            <p style="white-space: pre-wrap; line-height: 1.6;">{{ relato.mensagem }}</p>
+        </div>
+        
+        {% if relato.imagem %}
+        <div style="margin-bottom: 16px;">
+            <img src="{{ url_for('static', filename=relato.imagem) }}" 
+                 alt="Anexo" 
+                 style="max-width: 100%; max-height: 400px; border-radius: 8px; cursor: pointer;"
+                 onclick="window.open(this.src, '_blank')">
+        </div>
+        {% endif %}
+        
+        {% if relato.resposta_admin %}
+        <div style="background: rgba(59, 130, 246, 0.1); padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 16px;">
+            <p style="font-weight: 600; margin-bottom: 8px; color: #3b82f6;">📬 Resposta do Admin:</p>
+            <p style="white-space: pre-wrap;">{{ relato.resposta_admin }}</p>
+        </div>
+        {% endif %}
+        
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button onclick="responderRelato('{{ relato.id }}')" class="btn btn-primary">
+                📬 Responder
+            </button>
+            
+            <form method="POST" action="{{ url_for('admin_atualizar_status_relato', relato_id=relato.id) }}" style="display: inline;">
+                <input type="hidden" name="status" value="em_analise">
+                <button type="submit" class="btn btn-secondary">🔍 Em Análise</button>
+            </form>
+            
+            <form method="POST" action="{{ url_for('admin_atualizar_status_relato', relato_id=relato.id) }}" style="display: inline;">
+                <input type="hidden" name="status" value="resolvido">
+                <button type="submit" class="btn" style="background: #10b981; color: white;">✅ Resolver</button>
+            </form>
+            
+            <form method="POST" action="{{ url_for('admin_atualizar_status_relato', relato_id=relato.id) }}" style="display: inline;">
+                <input type="hidden" name="status" value="ignorado">
+                <button type="submit" class="btn" style="background: #ef4444; color: white;">❌ Ignorar</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card" style="text-align: center; padding: 60px 20px;">
+        <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.5;">📭</div>
+        <h3 style="margin-bottom: 12px;">Nenhum relato encontrado</h3>
+        <p style="color: var(--muted);">Não há relatos com os filtros selecionados</p>
+    </div>
+{% endif %}
+
+<!-- Modal de Resposta -->
+<div id="modalResposta" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="card" style="max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+        <h2 style="margin-bottom: 20px;">📬 Responder Relato</h2>
+        <form method="POST" action="" id="formResposta">
+            <textarea name="resposta" class="form-control" rows="6" placeholder="Digite sua resposta..." required style="margin-bottom: 16px;"></textarea>
+            <div style="display: flex; gap: 12px;">
+                <button type="submit" class="btn btn-primary">Enviar Resposta</button>
+                <button type="button" onclick="fecharModal()" class="btn btn-secondary">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function responderRelato(relatoId) {
+    const modal = document.getElementById('modalResposta');
+    const form = document.getElementById('formResposta');
+    form.action = `/admin/relatos/${relatoId}/responder`;
+    modal.style.display = 'flex';
+}
+
+function fecharModal() {
+    document.getElementById('modalResposta').style.display = 'none';
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('modalResposta').addEventListener('click', function(e) {
+    if (e.target === this) {
+        fecharModal();
+    }
+});
+</script>
+{% endblock %}

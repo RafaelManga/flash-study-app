@@ -65,7 +65,7 @@
             </p>
         </div>
     </a>
-    <a href="{{ url_for('listar_baralhos') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
+        <a href="{{ url_for('listar_baralhos') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
         <div style="text-align: center;">
             <div style="font-size: 3rem; margin-bottom: 16px;">📚</div>
             <h3 style="margin-bottom: 8px;">Meus Baralhos e Compartilhados</h3>
@@ -74,6 +74,26 @@
             </p>
         </div>
     </a>
+    <a href="{{ url_for('relatar_problema') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">📋</div>
+            <h3 style="margin-bottom: 8px;">Relatar Problema</h3>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Envie bugs, sugestões ou feedback
+            </p>
+        </div>
+    </a>
+    {% if usuario.is_admin %}
+    <a href="{{ url_for('admin_dashboard') }}" class="card hover-lift" style="text-decoration: none; color: inherit; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">🛡️</div>
+            <h3 style="margin-bottom: 8px;">Painel Admin</h3>
+            <p style="opacity: 0.9; font-size: 0.9rem;">
+                Gerenciar plataforma e usuários
+            </p>
+        </div>
+    </a>
+    {% endif %}
 </div>
 
 

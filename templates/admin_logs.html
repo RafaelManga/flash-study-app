@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Logs de Auditoria - Admin{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 16px;">📝 Logs de Auditoria</h1>
+    <p style="color: var(--muted);">Histórico completo de ações administrativas</p>
+</div>
+
+<!-- Filtros -->
+<div class="card" style="margin-bottom: 30px;">
+    <form method="GET" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+        <select name="admin" class="form-control" style="flex: 1; min-width: 200px;">
+            <option value="">Todos os Admins</option>
+            {% for admin in admins %}
+            <option value="{{ admin.id }}" {% if request.args.get('admin') == admin.id %}selected{% endif %}>
+                {{ admin.nome }}
+            </option>
+            {% endfor %}
+        </select>
+        
+        <select name="acao" class="form-control" style="flex: 1; min-width: 200px;">
+            <option value="">Todas as Ações</option>
+            <option value="usuario" {% if request.args.get('acao') == 'usuario' %}selected{% endif %}>Gestão de Usuários</option>
+            <option value="relato" {% if request.args.get('acao') == 'relato' %}selected{% endif %}>Relatos</option>
+            <option value="design" {% if request.args.get('acao') == 'design' %}selected{% endif %}>Design</option>
+            <option value="evento" {% if request.args.get('acao') == 'evento' %}selected{% endif %}>Eventos</option>
+            <option value="notificacao" {% if request.args.get('acao') == 'notificacao' %}selected{% endif %}>Notificações</option>
+        </select>
+        
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <a href="{{ url_for('admin_logs') }}" class="btn btn-secondary">Limpar</a>
+        
+        <form method="POST" action="{{ url_for('admin_exportar_logs') }}" style="margin-left: auto;">
+            <button type="submit" class="btn" style="background: #10b981; color: white;">
+                📥 Exportar CSV
+            </button>
+        </form>
+    </form>
+</div>
+
+<!-- Timeline de Logs -->
+<div class="card">
+    {% if logs %}
+        <div style="max-height: 700px; overflow-y: auto;">
+            {% for log in logs %}
+            <div style="padding: 16px; border-left: 4px solid 
+                {% if log.tipo == 'criacao' %}#10b981
+                {% elif log.tipo == 'edicao' %}#3b82f6
+                {% elif log.tipo == 'exclusao' %}#ef4444
+                {% elif log.tipo == 'suspensao' %}#f59e0b
+                {% else %}#8b5cf6{% endif %};
+                background: rgba(59, 130, 246, 0.05); margin-bottom: 16px; border-radius: 0 8px 8px 0;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                    <div>
+                        <strong>{{ log.admin_nome }}</strong>
+                        {% if log.tipo == 'criacao' %}
+                            <span class="badge" style="background: #10b981;">➕ Criação</span>
+                        {% elif log.tipo == 'edicao' %}
+                            <span class="badge" style="background: #3b82f6;">✏️ Edição</span>
+                        {% elif log.tipo == 'exclusao' %}
+                            <span class="badge" style="background: #ef4444;">🗑️ Exclusão</span>
+                        {% elif log.tipo == 'suspensao' %}
+                            <span class="badge" style="background: #f59e0b;">🚫 Suspensão</span>
+                        {% else %}
+                            <span class="badge" style="background: #8b5cf6;">⚙️ Ação</span>
+                        {% endif %}
+                    </div>
+                    
+                    <span style="color: var(--muted); font-size: 0.9rem;">
+                        {{ log.data|datetime('%d/%m/%Y %H:%M:%S') }}
+                    </span>
+                </div>
+                
+                <p style="margin-bottom: 8px; line-height: 1.6;">{{ log.descricao }}</p>
+                
+                {% if log.detalhes %}
+                <details style="margin-top: 12px;">
+                    <summary style="cursor: pointer; color: var(--primary); font-weight: 500;">
+                        🔍 Ver detalhes técnicos
+                    </summary>
+                    <pre style="background: var(--bg-secondary); padding: 12px; border-radius: 6px; margin-top: 8px; overflow-x: auto; font-size: 0.85rem;">{{ log.detalhes }}</pre>
+                </details>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 60px 20px;">
+            <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.5;">📋</div>
+            <h3 style="margin-bottom: 12px;">Nenhum log encontrado</h3>
+            <p style="color: var(--muted);">Não há registros com os filtros selecionados</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Estatísticas -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
+    <div class="card" style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h3 style="font-size: 2rem; margin-bottom: 8px;">{{ total_logs }}</h3>
+        <p style="opacity: 0.9;">Total de Logs</p>
+    </div>
+    
+    <div class="card" style="text-align: center; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+        <h3 style="font-size: 2rem; margin-bottom: 8px;">{{ logs_hoje }}</h3>
+        <p style="opacity: 0.9;">Hoje</p>
+    </div>
+    
+    <div class="card" style="text-align: center; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+        <h3 style="font-size: 2rem; margin-bottom: 8px;">{{ logs_semana }}</h3>
+        <p style="opacity: 0.9;">Esta Semana</p>
+    </div>
+    
+    <div class="card" style="text-align: center; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+        <h3 style="font-size: 2rem; margin-bottom: 8px;">{{ total_admins }}</h3>
+        <p style="opacity: 0.9;">Admins Ativos</p>
+    </div>
+</div>
+{% endblock %}

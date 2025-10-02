@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Relatar Problema - FlashStudy{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 16px;">📋 Relatar Problema ou Sugestão</h1>
+    <p style="color: var(--muted);">Nos ajude a melhorar! Reporte bugs, envie sugestões ou compartilhe feedback</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+    <!-- Formulário de Relato -->
+    <div class="card">
+        <h2 style="margin-bottom: 20px;">✍️ Novo Relato</h2>
+        
+        <form method="POST" enctype="multipart/form-data">
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Categoria *</label>
+                <select name="categoria" class="form-control" required>
+                    <option value="">Selecione...</option>
+                    <option value="bug">🐛 Bug / Erro</option>
+                    <option value="sugestao">💡 Sugestão de Funcionalidade</option>
+                    <option value="duvida">❓ Dúvida</option>
+                    <option value="feedback">📝 Feedback Geral</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Descrição *</label>
+                <textarea name="mensagem" class="form-control" rows="8" 
+                          placeholder="Descreva detalhadamente o problema, sugestão ou feedback..." 
+                          required></textarea>
+                <p style="color: var(--muted); font-size: 0.9rem; margin-top: 8px;">
+                    Mínimo 20 caracteres. Seja claro e específico.
+                </p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Anexar Imagem (opcional)</label>
+                <input type="file" name="imagem" class="form-control" accept="image/*">
+                <p style="color: var(--muted); font-size: 0.9rem; margin-top: 8px;">
+                    Formatos aceitos: PNG, JPG, JPEG, GIF (máx. 5MB)
+                </p>
+            </div>
+            
+            <div style="display: flex; gap: 12px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">📤 Enviar Relato</button>
+                <a href="{{ url_for('home') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Histórico de Relatos -->
+    <div>
+        <div class="card" style="margin-bottom: 20px;">
+            <h2 style="margin-bottom: 20px;">📜 Meus Relatos</h2>
+            
+            {% if meus_relatos %}
+                <div style="max-height: 600px; overflow-y: auto;">
+                    {% for relato in meus_relatos %}
+                    <div style="padding: 16px; border-bottom: 1px solid var(--border); margin-bottom: 12px;">
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            {% if relato.categoria == 'bug' %}
+                                <span class="badge" style="background: #ef4444; font-size: 0.8rem;">🐛</span>
+                            {% elif relato.categoria == 'sugestao' %}
+                                <span class="badge" style="background: #3b82f6; font-size: 0.8rem;">💡</span>
+                            {% elif relato.categoria == 'duvida' %}
+                                <span class="badge" style="background: #f59e0b; font-size: 0.8rem;">❓</span>
+                            {% else %}
+                                <span class="badge" style="background: #8b5cf6; font-size: 0.8rem;">📝</span>
+                            {% endif %}
+                            
+                            {% if relato.status == 'pendente' %}
+                                <span class="badge" style="background: #6b7280; font-size: 0.8rem;">⏳</span>
+                            {% elif relato.status == 'em_analise' %}
+                                <span class="badge" style="background: #3b82f6; font-size: 0.8rem;">🔍</span>
+                            {% elif relato.status == 'resolvido' %}
+                                <span class="badge" style="background: #10b981; font-size: 0.8rem;">✅</span>
+                            {% else %}
+                                <span class="badge" style="background: #ef4444; font-size: 0.8rem;">❌</span>
+                            {% endif %}
+                        </div>
+                        
+                        <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 8px;">
+                            {{ relato.data|datetime('%d/%m/%Y %H:%M') }}
+                        </p>
+                        
+                        <p style="margin-bottom: 12px; line-height: 1.5;">
+                            {{ relato.mensagem[:150] }}{% if relato.mensagem|length > 150 %}...{% endif %}
+                        </p>
+                        
+                        {% if relato.resposta_admin %}
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 12px; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                            <p style="font-weight: 600; margin-bottom: 6px; color: #3b82f6; font-size: 0.9rem;">
+                                📬 Resposta:
+                            </p>
+                            <p style="font-size: 0.9rem; line-height: 1.5;">
+                                {{ relato.resposta_admin[:100] }}{% if relato.resposta_admin|length > 100 %}...{% endif %}
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 40px 20px; color: var(--muted);">
+                    <div style="font-size: 3rem; margin-bottom: 12px; opacity: 0.5;">📭</div>
+                    <p>Você ainda não enviou nenhum relato</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Dicas -->
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h3 style="margin-bottom: 16px;">💡 Dicas para um bom relato</h3>
+            <ul style="line-height: 2; opacity: 0.95;">
+                <li>Seja específico e detalhado</li>
+                <li>Descreva os passos para reproduzir o erro</li>
+                <li>Anexe capturas de tela quando possível</li>
+                <li>Informe o navegador/dispositivo usado</li>
+                <li>Acompanhe as respostas dos administradores</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+// Contador de caracteres
+const textarea = document.querySelector('textarea[name="mensagem"]');
+if (textarea) {
+    const counter = document.createElement('div');
+    counter.style.cssText = 'text-align: right; color: var(--muted); font-size: 0.9rem; margin-top: 4px;';
+    textarea.parentElement.appendChild(counter);
+    
+    textarea.addEventListener('input', () => {
+        const length = textarea.value.length;
+        counter.textContent = `${length} caracteres`;
+        if (length < 20) {
+            counter.style.color = '#ef4444';
+        } else {
+            counter.style.color = 'var(--muted)';
+        }
+    });
+    textarea.dispatchEvent(new Event('input'));
+}
+</script>
+{% endblock %}

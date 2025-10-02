@@ -14,7 +14,8 @@
     "data_criacao": 1758240753,
     "data_nascimento": "",
     "frase_pessoal": "",
-    "tema": "dark"
+    "tema": "dark",
+    "is_admin": false
   },
   "USRWRPWIHU": {
     "id": "USRWRPWIHU",
@@ -32,6 +33,7 @@
     "data_nascimento": "",
     "frase_pessoal": "",
     "tema": "dark",
+    "is_admin": false,
     "competicoes": [
       {
         "id": "comp_1758738314_USRSZD0XV8_USRWRPWIHU",
@@ -64,12 +66,13 @@
     "senha": "$2b$12$.OEZSAPq/.fHgqpuMvloBOXMkdsgy9y89IYX956ZleUitYtD7uETO",
     "avatar": "",
     "points": 0,
-    "last_seen": 1759420493,
+    "last_seen": 1759361705,
     "friends": [],
     "ultimo_uso_ia": 0,
     "data_criacao": 1759361422,
     "data_nascimento": "",
     "frase_pessoal": "",
-    "tema": "dark"
+    "tema": "dark",
+    "is_admin": true
   }
 }

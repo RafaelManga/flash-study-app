@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Painel Administrativo - FlashStudy{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+        🛡️ Painel Administrativo
+    </h1>
+    <p style="color: var(--muted); font-size: 1.1rem;">
+        Gerencie a plataforma, visualize relatos e controle usuários
+    </p>
+</div>
+
+<!-- Estatísticas Gerais -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px;">
+    <div class="card" style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h3 style="font-size: 2.5rem; margin-bottom: 8px;">{{ total_usuarios }}</h3>
+        <p style="font-size: 1.1rem; opacity: 0.9;">Usuários Totais</p>
+    </div>
+    <div class="card" style="text-align: center; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+        <h3 style="font-size: 2.5rem; margin-bottom: 8px;">{{ total_baralhos }}</h3>
+        <p style="font-size: 1.1rem; opacity: 0.9;">Baralhos Criados</p>
+    </div>
+    <div class="card" style="text-align: center; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+        <h3 style="font-size: 2.5rem; margin-bottom: 8px;">{{ total_relatos }}</h3>
+        <p style="font-size: 1.1rem; opacity: 0.9;">Relatos Pendentes</p>
+    </div>
+    <div class="card" style="text-align: center; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+        <h3 style="font-size: 2.5rem; margin-bottom: 8px;">{{ usuarios_online }}</h3>
+        <p style="font-size: 1.1rem; opacity: 0.9;">Usuários Online</p>
+    </div>
+</div>
+
+<!-- Menu de Navegação Admin -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px;">
+    <a href="{{ url_for('admin_relatos') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">📋</div>
+            <h3 style="margin-bottom: 8px;">Gerenciar Relatos</h3>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Visualize e responda relatos de usuários
+            </p>
+        </div>
+    </a>
+
+    <a href="{{ url_for('admin_usuarios') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">👥</div>
+            <h3 style="margin-bottom: 8px;">Gerenciar Usuários</h3>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Controle de contas e permissões
+            </p>
+        </div>
+    </a>
+
+    <a href="{{ url_for('admin_design') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">🎨</div>
+            <h3 style="margin-bottom: 8px;">Design da Plataforma</h3>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Personalize cores, fontes e layout
+            </p>
+        </div>
+    </a>
+
+    <a href="{{ url_for('admin_eventos') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">🎉</div>
+            <h3 style="margin-bottom: 8px;">Eventos e Campanhas</h3>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Crie desafios e campanhas de estudo
+            </p>
+        </div>
+    </a>
+
+    <a href="{{ url_for('admin_notificacoes') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">📢</div>
+            <h3 style="margin-bottom: 8px;">Notificações</h3>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Envie avisos para usuários
+            </p>
+        </div>
+    </a>
+
+    <a href="{{ url_for('admin_logs') }}" class="card hover-lift" style="text-decoration: none; color: inherit;">
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">📝</div>
+            <h3 style="margin-bottom: 8px;">Logs de Auditoria</h3>
+            <p style="color: var(--muted); font-size: 0.9rem;">
+                Histórico de ações administrativas
+            </p>
+        </div>
+    </a>
+</div>
+
+<!-- Atividade Recente -->
+<div class="card">
+    <h2 style="margin-bottom: 20px;">📊 Atividade Recente da Plataforma</h2>
+    <div style="max-height: 400px; overflow-y: auto;">
+        {% if atividades_recentes %}
+            {% for atividade in atividades_recentes %}
+            <div style="padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>{{ atividade.usuario_nome }}</strong>
+                    <span style="color: var(--muted);">{{ atividade.descricao }}</span>
+                </div>
+                <span style="color: var(--muted); font-size: 0.9rem;">
+                    {{ atividade.data|datetime('%d/%m/%Y %H:%M') }}
+                </span>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="text-align: center; color: var(--muted); padding: 40px 0;">
+                Nenhuma atividade recente
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.card, .hover-lift');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+});
+</script>
+{% endblock %}

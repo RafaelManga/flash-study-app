@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Gerenciar Usuários - Admin{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 16px;">👥 Gerenciar Usuários</h1>
+    <p style="color: var(--muted);">Controle de contas, permissões e progresso</p>
+</div>
+
+<!-- Busca -->
+<div class="card" style="margin-bottom: 30px;">
+    <form method="GET" style="display: flex; gap: 16px; align-items: center;">
+        <input type="text" name="busca" class="form-control" placeholder="Buscar por nome, email ou ID..." 
+               value="{{ request.args.get('busca', '') }}" style="flex: 1;">
+        <button type="submit" class="btn btn-primary">🔍 Buscar</button>
+        <a href="{{ url_for('admin_usuarios') }}" class="btn btn-secondary">Limpar</a>
+    </form>
+</div>
+
+<!-- Lista de Usuários -->
+<div style="display: grid; gap: 20px;">
+    {% for user in usuarios_lista %}
+    <div class="card">
+        <div style="display: flex; gap: 20px; align-items: start;">
+            <!-- Avatar -->
+            <div style="flex-shrink: 0;">
+                {% if user.avatar %}
+                    <img src="{{ url_for('static', filename=user.avatar) }}" 
+                         alt="{{ user.nome }}"
+                         style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+                {% else %}
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
+                        {{ user.nome[0].upper() }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Informações -->
+            <div style="flex: 1;">
+                <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 8px;">
+                    <h3 style="margin: 0;">{{ user.nome }}</h3>
+                    {% if user.is_admin %}
+                        <span class="badge" style="background: #ef4444;">🛡️ ADMIN</span>
+                    {% endif %}
+                    {% if user.is_suspended %}
+                        <span class="badge" style="background: #6b7280;">🚫 Suspenso</span>
+                    {% endif %}
+                    {% if usuario_online(user.id) %}
+                        <span class="badge" style="background: #10b981;">🟢 Online</span>
+                    {% else %}
+                        <span class="badge" style="background: #6b7280;">⚫ Offline</span>
+                    {% endif %}
+                </div>
+                
+                <p style="color: var(--muted); margin-bottom: 4px;">📧 {{ user.email }}</p>
+                <p style="color: var(--muted); margin-bottom: 4px;">🆔 ID: {{ user.id }}</p>
+                <p style="color: var(--muted); margin-bottom: 4px;">⭐ Pontos: {{ user.points }}</p>
+                <p style="color: var(--muted); margin-bottom: 4px;">👥 Amigos: {{ user.friends|length }}</p>
+                <p style="color: var(--muted); margin-bottom: 4px;">
+                    📅 Cadastro: {{ user.data_criacao|datetime('%d/%m/%Y') if user.data_criacao else 'N/A' }}
+                </p>
+                <p style="color: var(--muted);">
+                    🕐 Último acesso: {{ user.last_seen|datetime('%d/%m/%Y %H:%M') if user.last_seen else 'Nunca' }}
+                </p>
+            </div>
+            
+            <!-- Ações -->
+            <div style="display: flex; flex-direction: column; gap: 8px; min-width: 180px;">
+                {% if not user.is_admin %}
+                <form method="POST" action="{{ url_for('admin_promover_admin', user_id=user.id) }}" style="width: 100%;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        🛡️ Promover para Admin
+                    </button>
+                </form>
+                {% else %}
+                <form method="POST" action="{{ url_for('admin_remover_admin', user_id=user.id) }}" style="width: 100%;">
+                    <button type="submit" class="btn btn-secondary" style="width: 100%;">
+                        👤 Remover Admin
+                    </button>
+                </form>
+                {% endif %}
+                
+                {% if not user.is_suspended %}
+                <form method="POST" action="{{ url_for('admin_suspender_usuario', user_id=user.id) }}" style="width: 100%;">
+                    <button type="submit" class="btn" style="width: 100%; background: #f59e0b; color: white;">
+                        🚫 Suspender Conta
+                    </button>
+                </form>
+                {% else %}
+                <form method="POST" action="{{ url_for('admin_reativar_usuario', user_id=user.id) }}" style="width: 100%;">
+                    <button type="submit" class="btn" style="width: 100%; background: #10b981; color: white;">
+                        ✅ Reativar Conta
+                    </button>
+                </form>
+                {% endif %}
+                
+                <button onclick="resetarProgresso('{{ user.id }}', '{{ user.nome }}')" 
+                        class="btn" style="width: 100%; background: #8b5cf6; color: white;">
+                    🔄 Resetar Progresso
+                </button>
+                
+                <button onclick="verDetalhes('{{ user.id }}')" class="btn btn-secondary" style="width: 100%;">
+                    👁️ Ver Detalhes
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not usuarios_lista %}
+<div class="card" style="text-align: center; padding: 60px 20px;">
+    <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.5;">👥</div>
+    <h3 style="margin-bottom: 12px;">Nenhum usuário encontrado</h3>
+    <p style="color: var(--muted);">Tente ajustar os filtros de busca</p>
+</div>
+{% endif %}
+
+<script>
+function resetarProgresso(userId, userName) {
+    if (confirm(`Tem certeza que deseja resetar o progresso de ${userName}?\n\nIsso irá:\n- Zerar pontos\n- Remover conquistas\n- Resetar estatísticas\n\nEsta ação não pode ser desfeita!`)) {
+        fetch(`/admin/usuarios/${userId}/resetar`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Progresso resetado com sucesso!');
+                location.reload();
+            } else {
+                alert('Erro ao resetar progresso: ' + data.error);
+            }
+        });
+    }
+}
+
+function verDetalhes(userId) {
+    window.location.href = `/admin/usuarios/${userId}/detalhes`;
+}
+</script>
+{% endblock %}
