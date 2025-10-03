@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Enviar Relato</h2>
+<div style="background:#222;color:#facc15;padding:10px 18px;border-radius:8px;margin-bottom:16px;font-size:15px;">
+  <b>Aviso:</b> Seja claro e respeitoso ao enviar seu relato. Não utilize xingamentos, ofensas ou linguagem inadequada.<br>
+  Relatos ofensivos poderão ser ignorados ou removidos.
+</div>
+<form method="POST" enctype="multipart/form-data">
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <label for="categoria" style="color:#fff;font-weight:500;">Categoria:</label>
+    <select name="categoria" id="categoria" required style="padding:8px 12px;border-radius:6px;border:1px solid #333;background:#222;color:#fff;font-size:15px;">
+      <option value="">Selecione</option>
+      <option value="bug">Bug</option>
+      <option value="sugestao">Sugestão</option>
+      <option value="elogio">Elogio</option>
+      <option value="outro">Outro</option>
+    </select>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <label for="descricao" style="color:#fff;font-weight:500;">Descrição:</label>
+    <textarea name="descricao" id="descricao" required minlength="15" style="padding:10px 12px;border-radius:6px;border:1px solid #333;background:#222;color:#fff;font-size:15px;min-height:80px;"></textarea>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <label for="imagem" style="color:#fff;font-weight:500;">Imagem (opcional):</label>
+    <input type="file" name="imagem" id="imagem" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" style="padding:6px 0;color:#fff;">
+    <div id="preview"></div>
+  </div>
+  <div style="margin:12px 0 0 0;display:flex;align-items:center;gap:10px;">
+    <input type="checkbox" id="anonimo" name="anonimo" style="accent-color:#6366f1;">
+    <label for="anonimo" style="color:#fff;font-size:15px;">Enviar como <b>Anônimo</b></label>
+  </div>
+  <div style="display:flex;gap:16px;justify-content:flex-end;margin-top:8px;">
+    <button type="submit" style="background:linear-gradient(90deg,#3b82f6,#6366f1);color:#fff;padding:10px 28px;border:none;border-radius:8px;font-weight:600;box-shadow:0 2px 8px #0002;cursor:pointer;transition:.2s;letter-spacing:.5px;">Enviar relato</button>
+    <button type="button" onclick="limparCampos()" style="background:#222;color:#fff;padding:10px 28px;border:none;border-radius:8px;font-weight:600;box-shadow:0 2px 8px #0002;cursor:pointer;transition:.2s;letter-spacing:.5px;">Limpar campos</button>
+    <a href="{{ url_for('meus_relatos') }}" style="background:#6366f1;color:#fff;padding:10px 28px;border-radius:8px;text-decoration:none;font-weight:600;box-shadow:0 2px 8px #0002;transition:.2s;display:inline-flex;align-items:center;">Voltar para Meus Relatos</a>
+  </div>
+</form>
+<script>
+function limparCampos() {
+  document.getElementById('categoria').value = '';
+  document.getElementById('descricao').value = '';
+  document.getElementById('imagem').value = '';
+  document.getElementById('preview').innerHTML = '';
+}
+// Preview da imagem
+const inputImg = document.getElementById('imagem');
+inputImg.addEventListener('change', function() {
+  const preview = document.getElementById('preview');
+  preview.innerHTML = '';
+  if (this.files && this.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      preview.innerHTML = `<img src='${e.target.result}' style='max-width:200px;max-height:200px;' />`;
+    };
+    reader.readAsDataURL(this.files[0]);
+  }
+});
+</script>
+{% endblock %}

@@ -32,6 +32,26 @@ class Comentario:
             "data": self.data
         }
 
+class Relato:
+    def __init__(self, nome, categoria, descricao, imagem=None, data=None, status='Em análise'):
+        self.nome = nome
+        self.categoria = categoria
+        self.descricao = descricao
+        self.imagem = imagem
+        self.data = data
+        self.status = status
+
+    def to_dict(self):
+        return {
+            'id': getattr(self, 'id', None),
+            'nome': self.nome,
+            'categoria': self.categoria,
+            'descricao': self.descricao,
+            'imagem': self.imagem,
+            'data': self.data,
+            'status': self.status
+        }
+
 class Usuario:
     def __init__(self, uid, nome, email, senha, avatar="", points=0, last_seen=0, friends=None, badges=None, conquistas=None):
         self.id = uid
@@ -45,18 +65,3 @@ class Usuario:
         self.competicoes = []  # Lista de competições/desafios ativos
         self.badges = badges if badges is not None else []  # Lista de badges
         self.conquistas = conquistas if conquistas is not None else []  # Lista de conquistas
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "nome": self.nome,
-            "email": self.email,
-            "senha": self.senha,
-            "avatar": self.avatar,
-            "points": self.points,
-            "last_seen": self.last_seen,
-            "friends": self.friends,
-            "competicoes": self.competicoes,
-            "badges": self.badges,
-            "conquistas": self.conquistas
-        }

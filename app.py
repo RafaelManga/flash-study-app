@@ -1,16 +1,3 @@
-
-
-# --- Página de Chat Privado entre Amigos ---
-# (deve ficar após a criação do objeto app)
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-FlashStudy - Plataforma de Flashcards com IA
-Versão: 2.0
-Autor: FlashStudy Team
-"""
-
 import os
 import json
 import time
@@ -19,13 +6,200 @@ import string
 from datetime import datetime
 from uuid import uuid4
 from functools import wraps
-
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, g
 from flask_bcrypt import Bcrypt
 import google.generativeai as genai
+from models import Relato
 
-# --- Configuração da Aplicação ---
+
+# CRIAÇÃO DO APP
 app = Flask(__name__)
+
+# ROTA PARA OCULTAR RELATO CANCELADO
+@app.route('/ocultar_relato/<relato_id>', methods=['POST'])
+def ocultar_relato(relato_id):
+    relatos = []
+    if os.path.exists(RELATOS_PATH):
+        with open(RELATOS_PATH, 'r', encoding='utf-8') as f:
+            try:
+                relatos = json.load(f)
+            except Exception:
+                relatos = []
+    # Remove relato cancelado do JSON
+    relatos = [r for r in relatos if not (r.get('id') == relato_id and r.get('status') == 'cancelado')]
+    with open(RELATOS_PATH, 'w', encoding='utf-8') as f:
+        json.dump(relatos, f, ensure_ascii=False, indent=2)
+    flash('Relato ocultado com sucesso!', 'success')
+    return redirect(url_for('meus_relatos'))
+
+# ----------------------
+# VARIÁVEIS GLOBAIS
+DATA_DIR = "data"
+UPLOAD_FOLDER = "static/uploads"
+ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
+RELATOS_PATH = os.path.join(DATA_DIR, "relatos.json")
+IMAGENS_RELATO_PATH = os.path.join(UPLOAD_FOLDER, "relatos")
+os.makedirs(IMAGENS_RELATO_PATH, exist_ok=True)
+
+
+# ROTA DE CANCELAMENTO DE RELATO
+@app.route('/cancelar_relato/<relato_id>', methods=['POST'])
+def cancelar_relato(relato_id):
+    # Carrega relatos
+    relatos = []
+    if os.path.exists(RELATOS_PATH):
+        with open(RELATOS_PATH, 'r', encoding='utf-8') as f:
+            try:
+                relatos = json.load(f)
+            except Exception:
+                relatos = []
+    # Busca relato
+    for r in relatos:
+        if r.get('id') == relato_id:
+            tempo_envio = r.get('data', None)
+            try:
+                tempo_envio = float(tempo_envio)
+            except (TypeError, ValueError):
+                tempo_envio = 0
+            if tempo_envio and time.time() - tempo_envio <= 1800:
+                r['status'] = 'cancelado'
+                with open(RELATOS_PATH, 'w', encoding='utf-8') as f:
+                    json.dump(relatos, f, ensure_ascii=False, indent=2)
+                flash('Relato cancelado com sucesso!', 'success')
+            else:
+                flash('Prazo para cancelar expirou ou relato inválido.', 'error')
+            break
+    return redirect(url_for('meus_relatos'))
+
+@app.route('/relatar_problema', methods=['GET', 'POST'])
+def relatar_problema():
+    nome = None
+    categoria = None
+    descricao = None
+    imagem = None
+    data_envio = None
+    imagem_nome = None
+    if request.method == 'POST':
+        # Permite ao usuário escolher anonimato
+        anonimato = request.form.get('anonimo')
+        if 'user_id' in session and session['user_id'] in usuarios:
+            if anonimato == 'on':
+                nome = 'Anônimo'
+            else:
+                nome = usuarios[session['user_id']]['nome']
+        elif hasattr(g, 'user') and g.user:
+            if anonimato == 'on':
+                nome = 'Anônimo'
+            else:
+                nome = g.user.get('nome')
+        else:
+            nome = request.form.get('nome') or 'Anônimo'
+        categoria = request.form.get('categoria')
+        descricao = request.form.get('descricao')
+        imagem = request.files.get('imagem')
+        data_envio = int(time.time())
+
+        # Validação de campos obrigatórios e mínimos
+        # Se não houver login, permitir relato anônimo
+        if not categoria or categoria == "" or not descricao:
+            flash('Preencha todos os campos obrigatórios.', 'error')
+            return redirect(url_for('relatar_problema'))
+        if len(descricao.strip()) < 15:
+            flash('A descrição deve ter pelo menos 15 caracteres.', 'error')
+            return redirect(url_for('relatar_problema'))
+
+        # Validação de imagem
+        imagem_nome = None
+        if imagem and imagem.filename:
+            ext = imagem.filename.rsplit('.', 1)[-1].lower()
+            if ext not in ['png', 'jpg', 'jpeg', 'gif', 'pjg', 'pjpeg', 'webp']:
+                flash('Formato de imagem inválido. Aceito: PNG, JPG, JPEG, GIF, WEBP.', 'error')
+                return redirect(url_for('relatar_problema'))
+            imagem.seek(0, os.SEEK_END)
+            tamanho = imagem.tell()
+            imagem.seek(0)
+            if tamanho > 5 * 1024 * 1024:
+                flash('Imagem excede 5MB.', 'error')
+                return redirect(url_for('relatar_problema'))
+            imagem_nome = f"relato_{int(datetime.now().timestamp())}_{imagem.filename}"
+            imagem.save(os.path.join(IMAGENS_RELATO_PATH, imagem_nome))
+
+        # Validação de imagem
+        imagem_nome = None
+        if imagem and imagem.filename:
+            ext = imagem.filename.rsplit('.', 1)[-1].lower()
+            if ext not in ['png', 'jpg', 'jpeg', 'gif']:
+                flash('Formato de imagem inválido.', 'error')
+                return redirect(url_for('relatar_problema'))
+            imagem.seek(0, os.SEEK_END)
+            tamanho = imagem.tell()
+            imagem.seek(0)
+            if tamanho > 5 * 1024 * 1024:
+                flash('Imagem excede 5MB.', 'error')
+                return redirect(url_for('relatar_problema'))
+            imagem_nome = f"relato_{int(datetime.now().timestamp())}_{imagem.filename}"
+            imagem.save(os.path.join(IMAGENS_RELATO_PATH, imagem_nome))
+
+
+    # Só cria relato se for POST e todos os campos forem válidos
+        if request.method == 'POST' and categoria and descricao and len(descricao.strip()) >= 15:
+            relato_id = str(uuid4())
+            relato = Relato(nome, categoria, descricao, imagem_nome, data_envio)
+            relato.id = relato_id
+
+            # Salvar relato
+            relatos = []
+            if os.path.exists(RELATOS_PATH):
+                with open(RELATOS_PATH, 'r', encoding='utf-8') as f:
+                    try:
+                        relatos = json.load(f)
+                    except Exception:
+                        relatos = []
+            relatos.append(relato.to_dict())
+            with open(RELATOS_PATH, 'w', encoding='utf-8') as f:
+                json.dump(relatos, f, ensure_ascii=False, indent=2)
+
+            flash('Relato enviado com sucesso!', 'success')
+            return redirect(url_for('meus_relatos'))
+
+    return render_template('relatar_problema.html')
+
+@app.route('/meus_relatos')
+def meus_relatos():
+    user_id = session.get('user_id')
+    nome = None
+    if user_id and user_id in usuarios:
+        nome = usuarios[user_id]['nome']
+    elif hasattr(g, 'user') and g.user:
+        nome = g.user.get('nome')
+    relatos = []
+    import uuid
+    if os.path.exists(RELATOS_PATH):
+        with open(RELATOS_PATH, 'r', encoding='utf-8') as f:
+            try:
+                relatos = json.load(f)
+                for r in relatos:
+                    if 'id' not in r or not r['id']:
+                        r['id'] = str(uuid.uuid4())
+                with open(RELATOS_PATH, 'w', encoding='utf-8') as fw:
+                    json.dump(relatos, fw, ensure_ascii=False, indent=2)
+            except Exception:
+                relatos = []
+    # Se não houver login, mostrar relatos do usuário 'Anônimo'
+    if not nome:
+        meus = [r for r in relatos if r['nome'] == 'Anônimo']
+    else:
+        meus = [r for r in relatos if r['nome'] == nome]
+    import datetime
+    return render_template('meus_relatos.html', relatos=meus, imagens_path=IMAGENS_RELATO_PATH, datetime=datetime.datetime)
+
+
+# --- Página de Chat Privado entre Amigos ---
+# (deve ficar após a criação do objeto app)
+
+
+
+
 
 # Filtro Jinja2 para formatar datas
 from datetime import datetime

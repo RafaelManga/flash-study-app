@@ -6,7 +6,7 @@
     "senha": "$2b$12$BIiWpNvYS2gcqK1qkgarUOYgDndqFQeXJzyL1JaF6.49PrHe3F/PK",
     "avatar": "uploads/avatar_USRSZD0XV8_1758975369.gif",
     "points": 60,
-    "last_seen": 1758976625,
+    "last_seen": 1759493722,
     "friends": [
       "USRWRPWIHU"
     ],
@@ -15,16 +15,17 @@
     "data_nascimento": "3322-02-21",
     "frase_pessoal": "O homem nasce bom, mas a calvicie o corrompe.   Lollllllllllllllllllllllllllllllllllllllllllllllllll",
     "tema": "dark",
-    "prev_seen": 1758976332,
+    "prev_seen": 1759493662,
     "badges": [],
     "conquistas": [
       "⚡ Resposta Relâmpago",
       "🧠 Primeiro Card",
-      "🔁 Revisador Profissional"
+      "🔁 Revisador Profissional",
+      "🐱 Estudante de Madrugada"
     ],
     "stats": {
       "deck_review_counts": {
-        "matematica_fbbc": 9,
+        "matematica_fbbc": 10,
         "rewrw_a07f": 3
       },
       "fast_answers": 1,
@@ -108,7 +109,8 @@
           "nome": "rewrw",
           "count": 2
         }
-      }
+      },
+      "late_night_visits": 6
     },
     "hard_cards": [],
     "favorites": [

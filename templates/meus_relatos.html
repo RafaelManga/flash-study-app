@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+  <h2>Meus Relatos</h2>
+  <a href="/relatar_problema" class="btn" style="background:#3b82f6;color:#fff;padding:8px 18px;border-radius:6px;text-decoration:none;font-weight:500;">Novo Relato</a>
+</div>
+{% for relato in relatos %}
+  {% if relato.status == 'cancelado' %}
+    <div class="relato-card" style="border:1px solid #222; border-radius:8px; padding:16px; margin-bottom:24px; background:#181818; opacity:0.6; filter:grayscale(0.7);">
+  {% else %}
+    <div class="relato-card" style="border:1px solid #222; border-radius:8px; padding:16px; margin-bottom:24px; background:#181818;">
+  {% endif %}
+    <div style="display:flex; align-items:center; gap:8px; font-size:1.1em; margin-bottom:4px;">
+      {% if relato.categoria == 'Sugestão' %}<span>💡</span>{% elif relato.categoria == 'Bug' %}<span>🐞</span>{% elif relato.categoria == 'Feedback' %}<span>📢</span>{% endif %}
+      <strong>Categoria:</strong> {{ relato.categoria }}
+    </div>
+    <div><strong>👤 Usuário:</strong> {{ relato.nome }}</div>
+      <div>
+        <strong>⏳ Status:</strong>
+        {% if relato.status == 'cancelado' %}
+          <span style="color:#e11d48;font-weight:bold;">Cancelado</span>
+        {% elif relato.status == 'resolvido' %}
+          <span style="color:#22c55e;font-weight:bold;">Resolvido</span>
+        {% else %}
+          <span style="color:#facc15;font-weight:bold;">Em análise</span>
+        {% endif %}
+      </div>
+    <div><strong>📅 Data:</strong> {{ relato.data|datetime }}</div>
+    <div>
+      <strong>🖼️ Imagem:</strong>
+      {% if relato.imagem %}
+        <img src="/static/uploads/relatos/{{ relato.imagem }}" style="max-width:200px;max-height:200px; border-radius:6px; border:1px solid #ddd; margin-top:4px;" />
+      {% else %}Sem imagem{% endif %}
+    </div>
+    <div style="margin-top:8px;"><strong>📝 Descrição:</strong> {{ relato.descricao }}</div>
+  {% set tempo_restante = 1800 - (datetime.utcnow().timestamp() - relato.data if relato.data else 0) %}
+    <form method="POST" action="{{ url_for('cancelar_relato', relato_id=relato.id) }}" style="margin-top:12px;display:inline;">
+      <button type="submit"
+        {% if tempo_restante <= 0 or relato.status == 'cancelado' %}disabled style="background:#444;color:#bbb;cursor:not-allowed;"{% else %}style="background:#e11d48;color:#fff;" onclick="return confirm('Você tem certeza que quer cancelar este relato?')"{% endif %}>
+        🛑 Cancelar envio
+      </button>
+    </form>
+    <div style="font-size:small;color:#555; margin-top:4px;">
+      ℹ️ Você pode cancelar o envio dentro de 30 minutos após o envio. Após esse prazo, o botão será desativado.
+    </div>
+    {% if relato.status == 'cancelado' %}
+      <form method="post" action="{{ url_for('ocultar_relato', relato_id=relato.id) }}" style="display:inline;">
+        <button class="btn-x-relato" type="submit" title="Ocultar relato" style="position:absolute;top:8px;right:8px;background:#f87171;color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:18px;cursor:pointer;">×</button>
+      </form>
+    {% endif %}
+  </div>
+{% else %}
+  <p>Você ainda não enviou relatos.</p>
+{% endfor %}
+{% endblock %}
