@@ -1,0 +1,161 @@
+{
+  "USRSZD0XV8": [
+    {
+      "ts": 1758907196,
+      "card_id": "66d7520d-7335-4e18-9f95-9cc227d06c18",
+      "acertou": true
+    },
+    {
+      "ts": 1758907515,
+      "card_id": "66d7520d-7335-4e18-9f95-9cc227d06c18",
+      "acertou": true
+    },
+    {
+      "ts": 1758907756,
+      "card_id": "66d7520d-7335-4e18-9f95-9cc227d06c18",
+      "acertou": true
+    },
+    {
+      "ts": 1758908987,
+      "card_id": "66d7520d-7335-4e18-9f95-9cc227d06c18",
+      "acertou": false,
+      "frente": "1 + 1",
+      "verso": "2",
+      "baralho": "matematica",
+      "baralho_id": "matematica_fbbc"
+    },
+    {
+      "ts": 1758909589,
+      "card_id": "66d7520d-7335-4e18-9f95-9cc227d06c18",
+      "acertou": false,
+      "frente": "1 + 1",
+      "verso": "2",
+      "baralho": "matematica",
+      "baralho_id": "matematica_fbbc"
+    },
+    {
+      "ts": 1758909596,
+      "card_id": "960919bd-2332-41ca-a1a0-24c02dfb1b7f",
+      "acertou": false,
+      "frente": "4",
+      "verso": "4",
+      "baralho": "rewrw",
+      "baralho_id": "rewrw_a07f"
+    },
+    {
+      "ts": 1758975290,
+      "card_id": "66d7520d-7335-4e18-9f95-9cc227d06c18",
+      "acertou": false,
+      "frente": "1 + 1",
+      "verso": "2",
+      "baralho": "matematica",
+      "baralho_id": "matematica_fbbc"
+    },
+    {
+      "ts": 1758976683,
+      "card_id": "960919bd-2332-41ca-a1a0-24c02dfb1b7f",
+      "acertou": false,
+      "frente": "4",
+      "verso": "4",
+      "baralho": "rewrw",
+      "baralho_id": "rewrw_a07f"
+    }
+  ],
+  "USRWRPWIHU": [
+    {
+      "ts": 1758975657,
+      "card_id": "d7000589-2ef1-46f8-8b9e-cdb680ccd003",
+      "acertou": false,
+      "frente": "1",
+      "verso": "1",
+      "baralho": "fwrw",
+      "baralho_id": "fwrw_6ee4"
+    },
+    {
+      "ts": 1758975760,
+      "card_id": "5763c67d-84c7-432a-ad98-a015afdf7385",
+      "acertou": true,
+      "frente": "Ele e gay?",
+      "verso": "E sim",
+      "baralho": "testt",
+      "baralho_id": "testt_1f69"
+    },
+    {
+      "ts": 1758975834,
+      "card_id": "5763c67d-84c7-432a-ad98-a015afdf7385",
+      "acertou": false,
+      "frente": "Ele e gay?",
+      "verso": "E sim",
+      "baralho": "testt",
+      "baralho_id": "testt_1f69"
+    },
+    {
+      "ts": 1758975845,
+      "card_id": "5763c67d-84c7-432a-ad98-a015afdf7385",
+      "acertou": false,
+      "frente": "Ele e gay?",
+      "verso": "E sim",
+      "baralho": "testt",
+      "baralho_id": "testt_1f69"
+    },
+    {
+      "ts": 1758975931,
+      "card_id": "5cc087b6-319b-4952-95be-f5c7d0edb80f",
+      "acertou": true,
+      "frente": "Almeida e muito viadinho?",
+      "verso": "Acredito que sim ne",
+      "baralho": "fwrw",
+      "baralho_id": "fwrw_6ee4"
+    },
+    {
+      "ts": 1758975945,
+      "card_id": "d7000589-2ef1-46f8-8b9e-cdb680ccd003",
+      "acertou": false,
+      "frente": "1",
+      "verso": "1",
+      "baralho": "fwrw",
+      "baralho_id": "fwrw_6ee4"
+    },
+    {
+      "ts": 1758975958,
+      "card_id": "5cc087b6-319b-4952-95be-f5c7d0edb80f",
+      "acertou": false,
+      "frente": "Almeida e muito viadinho?",
+      "verso": "Acredito que sim ne",
+      "baralho": "fwrw",
+      "baralho_id": "fwrw_6ee4"
+    }
+  ],
+  "USR6PYOPNW": [
+    {
+      "ts": 1758835929,
+      "card_id": "4197dc15-cf8f-4ce3-91ee-5a3af27fb81f",
+      "acertou": true
+    },
+    {
+      "ts": 1758835938,
+      "card_id": "0f6ddaca-dc05-4e23-8e6b-fb1ecce6902b",
+      "acertou": true
+    },
+    {
+      "ts": 1758836828,
+      "card_id": "0f6ddaca-dc05-4e23-8e6b-fb1ecce6902b",
+      "acertou": true
+    },
+    {
+      "ts": 1758836834,
+      "card_id": "4197dc15-cf8f-4ce3-91ee-5a3af27fb81f",
+      "acertou": true
+    },
+    {
+      "ts": 1758904550,
+      "card_id": "0f6ddaca-dc05-4e23-8e6b-fb1ecce6902b",
+      "acertou": false
+    },
+    {
+      "ts": 1758904552,
+      "card_id": "4197dc15-cf8f-4ce3-91ee-5a3af27fb81f",
+      "acertou": false
+    }
+  ]
+}

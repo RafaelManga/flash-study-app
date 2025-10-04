@@ -1,0 +1,22 @@
+{
+  "USRSZD0XV8": {
+    "friends": [
+      "USRWRPWIHU"
+    ]
+  },
+  "USRWRPWIHU": {
+    "friends": [
+      "USRSZD0XV8"
+    ]
+  },
+  "USR6PYOPNW": {
+    "friends": [
+      "USRY0K3BHX"
+    ]
+  },
+  "USRY0K3BHX": {
+    "friends": [
+      "USR6PYOPNW"
+    ]
+  }
+}

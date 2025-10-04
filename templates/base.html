@@ -11,22 +11,35 @@
 <body>
     {% if usuario %}
     <div class="topbar">
-        <a href="{{ url_for('home') }}" class="brand">🧠 FlashStudy</a>
+        <a href="{{ url_for('admin_dashboard') if usuario.is_admin else url_for('home') }}" class="brand">🧠 FlashStudy{% if usuario.is_admin %} - Admin{% endif %}</a>
 
         <nav class="main-nav">
-            <a href="{{ url_for('home') }}" class="nav-item">🏠 Início</a>
-            <a href="{{ url_for('criar_card') }}" class="nav-item">➕ Criar Card</a>
-            <a href="{{ url_for('gerar_ia') }}" class="nav-item">🤖 IA</a>
-            <a href="{{ url_for('desafio') }}" class="nav-item">🎯 Desafio</a>
-            <a href="{{ url_for('amigos') }}" class="nav-item">
-                👥 Amigos
-                {% if notificacoes_count > 0 %}
-                <span class="notification-badge">{{ notificacoes_count }}</span>
-                {% endif %}
-            </a>
-            <a href="{{ url_for('pagina_competicao') }}" class="nav-item">🏆 Competições</a>
-            <a href="{{ url_for('insights') }}" class="nav-item">📊 Insights</a>
-            <a href="{{ url_for('perfil') }}" class="nav-item">👤 Perfil</a>
+            {% if not usuario.is_admin %}
+                <!-- Interface para usuários comuns -->
+                <a href="{{ url_for('home') }}" class="nav-item">🏠 Início</a>
+                <a href="{{ url_for('criar_card') }}" class="nav-item">➕ Criar Card</a>
+                <a href="{{ url_for('gerar_ia') }}" class="nav-item">🤖 IA</a>
+                <a href="{{ url_for('desafio') }}" class="nav-item">🎯 Desafio</a>
+                <a href="{{ url_for('amigos') }}" class="nav-item">
+                    👥 Amigos
+                    {% if notificacoes_count > 0 %}
+                    <span class="notification-badge">{{ notificacoes_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('pagina_competicao') }}" class="nav-item">🏆 Competições</a>
+                <a href="{{ url_for('insights') }}" class="nav-item">📊 Insights</a>
+                <a href="{{ url_for('perfil') }}" class="nav-item">👤 Perfil</a>
+            {% else %}
+                <!-- Interface exclusiva para administradores -->
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-item">📊 Painel Admin</a>
+                <a href="{{ url_for('admin_users') }}" class="nav-item">👥 Usuários</a>
+                <a href="{{ url_for('admin_reports') }}" class="nav-item">📢 Relatos</a>
+                <a href="{{ url_for('admin_communication') }}" class="nav-item">💬 Comunicação</a>
+                <a href="{{ url_for('admin_logs') }}" class="nav-item">📋 Logs</a>
+                <a href="{{ url_for('admin_settings') }}" class="nav-item">⚙️ Configurações</a>
+            {% endif %}
+
+            <a href="{{ url_for('relatar_problema') }}" class="nav-item">🐛 Relatar Problema</a>
 
             <button class="theme-toggle" onclick="alternarTema()">
                 <span class="theme-icon">{{ '🌙' if usuario.tema == 'light' else '☀️' }}</span>

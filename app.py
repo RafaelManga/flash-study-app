@@ -190,6 +190,24 @@ def meus_relatos():
         meus = [r for r in relatos if r['nome'] == 'Anônimo']
     else:
         meus = [r for r in relatos if r['nome'] == nome]
+    
+    # Calcula tempo restante para cancelamento (30 minutos = 1800 segundos)
+    agora = time.time()
+    for relato in meus:
+        tempo_envio = relato.get('data', 0)
+        try:
+            tempo_envio = float(tempo_envio)
+        except (TypeError, ValueError):
+            tempo_envio = 0
+        
+        # Calcula quanto tempo passou desde o envio
+        tempo_passado = agora - tempo_envio if tempo_envio else 1800
+        # Tempo restante para cancelar (30 minutos)
+        tempo_restante = 1800 - tempo_passado
+        # Pode cancelar se: não está cancelado E tempo restante > 0
+        relato['pode_cancelar'] = (relato.get('status') != 'cancelado' and tempo_restante > 0)
+        relato['tempo_restante_segundos'] = max(0, int(tempo_restante))
+    
     import datetime
     return render_template('meus_relatos.html', relatos=meus, imagens_path=IMAGENS_RELATO_PATH, datetime=datetime.datetime)
 
@@ -556,6 +574,31 @@ def login_required(f):
     return decorated_function
 
 
+# --- Decorador de Admin ---
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Você precisa fazer login para acessar esta página.", "warning")
+            return redirect(url_for("login"))
+
+        user_id = session["user_id"]
+        if user_id not in usuarios:
+            session.clear()
+            flash("Sessão inválida. Faça login novamente.", "danger")
+            return redirect(url_for("login"))
+
+        g.user = usuarios[user_id]
+        
+        if not g.user.get("is_admin", False):
+            flash("Acesso negado. Apenas administradores podem acessar esta área.", "danger")
+            return redirect(url_for("home"))
+
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
 # --- Context Processor ---
 @app.context_processor
 def inject_user():
@@ -655,7 +698,12 @@ def login():
             user_data["last_seen"] = agora_timestamp()
             salvar_dados(USERS_PATH, usuarios)
             flash(f"Bem-vindo de volta, {user_data['nome']}!", "success")
-            return redirect(url_for("home"))
+            
+            # Redireciona para painel admin se for administrador
+            if user_data.get("is_admin", False):
+                return redirect(url_for("admin_dashboard"))
+            else:
+                return redirect(url_for("home"))
         else:
             flash("Email ou senha incorretos. Verifique suas credenciais.", "danger")
 
@@ -2032,6 +2080,285 @@ def heartbeat():
     except Exception:
         pass
     return jsonify({"status": "ok"})
+
+
+# ============================================
+# ROTAS ADMINISTRATIVAS
+# ============================================
+
+# --- Painel Admin ---
+@app.route("/admin/dashboard")
+@admin_required
+def admin_dashboard():
+    # Estatísticas gerais
+    total_users = len(usuarios)
+    total_admins = sum(1 for u in usuarios.values() if u.get("is_admin", False))
+    total_regular = total_users - total_admins
+    
+    # Carrega relatos
+    relatos = carregar_dados(RELATOS_PATH, [])
+    total_relatos = len(relatos)
+    relatos_pendentes = len([r for r in relatos if r.get('status') != 'resolvido'])
+    relatos_resolvidos = len([r for r in relatos if r.get('status') == 'resolvido'])
+    
+    # Usuários recentes (últimos 10)
+    usuarios_lista = sorted(usuarios.values(), key=lambda u: u.get('data_criacao', 0), reverse=True)[:10]
+    
+    # Relatos recentes
+    relatos_recentes = sorted(relatos, key=lambda r: r.get('data', 0), reverse=True)[:10]
+    
+    stats = {
+        'total_users': total_users,
+        'total_admins': total_admins,
+        'total_regular': total_regular,
+        'total_relatos': total_relatos,
+        'relatos_pendentes': relatos_pendentes,
+        'relatos_resolvidos': relatos_resolvidos
+    }
+    
+    return render_template('admin/dashboard.html', 
+                         stats=stats, 
+                         usuarios_recentes=usuarios_lista,
+                         relatos_recentes=relatos_recentes)
+
+
+# --- Gestão de Usuários ---
+@app.route("/admin/users")
+@admin_required
+def admin_users():
+    # Filtros
+    tipo = request.args.get('tipo', 'todos')
+    busca = request.args.get('busca', '')
+    
+    usuarios_lista = list(usuarios.values())
+    
+    # Aplica filtros
+    if tipo == 'admin':
+        usuarios_lista = [u for u in usuarios_lista if u.get('is_admin', False)]
+    elif tipo == 'comum':
+        usuarios_lista = [u for u in usuarios_lista if not u.get('is_admin', False)]
+    
+    if busca:
+        busca_lower = busca.lower()
+        usuarios_lista = [u for u in usuarios_lista if 
+                         busca_lower in u.get('nome', '').lower() or 
+                         busca_lower in u.get('email', '').lower() or
+                         busca_lower in u.get('id', '').lower()]
+    
+    # Ordena por data de criação
+    usuarios_lista.sort(key=lambda u: u.get('data_criacao', 0), reverse=True)
+    
+    return render_template('admin/users.html', usuarios=usuarios_lista, tipo=tipo, busca=busca)
+
+
+@app.route("/admin/users/<user_id>/toggle_admin", methods=['POST'])
+@admin_required
+def admin_toggle_admin(user_id):
+    if user_id not in usuarios:
+        flash('Usuário não encontrado.', 'danger')
+        return redirect(url_for('admin_users'))
+    
+    # Não pode remover admin de si mesmo
+    if user_id == g.user['id']:
+        flash('Você não pode alterar seu próprio status de administrador.', 'warning')
+        return redirect(url_for('admin_users'))
+    
+    user = usuarios[user_id]
+    user['is_admin'] = not user.get('is_admin', False)
+    salvar_dados(USERS_PATH, usuarios)
+    
+    status = 'administrador' if user['is_admin'] else 'usuário comum'
+    flash(f'Usuário {user["nome"]} agora é {status}.', 'success')
+    return redirect(url_for('admin_users'))
+
+
+@app.route("/admin/users/<user_id>/delete", methods=['POST'])
+@admin_required
+def admin_delete_user(user_id):
+    if user_id not in usuarios:
+        flash('Usuário não encontrado.', 'danger')
+        return redirect(url_for('admin_users'))
+    
+    # Não pode deletar a si mesmo
+    if user_id == g.user['id']:
+        flash('Você não pode deletar sua própria conta.', 'warning')
+        return redirect(url_for('admin_users'))
+    
+    nome = usuarios[user_id]['nome']
+    del usuarios[user_id]
+    
+    # Remove dos baralhos
+    if user_id in baralhos:
+        del baralhos[user_id]
+    
+    salvar_dados(USERS_PATH, usuarios)
+    salvar_dados(BARALHOS_PATH, baralhos)
+    
+    flash(f'Usuário {nome} foi excluído permanentemente.', 'success')
+    return redirect(url_for('admin_users'))
+
+
+# --- Relatórios ---
+@app.route("/admin/reports")
+@admin_required
+def admin_reports():
+    # Filtros
+    status_filter = request.args.get('status', 'todos')
+    categoria_filter = request.args.get('categoria', 'todos')
+    
+    relatos = carregar_dados(RELATOS_PATH, [])
+    
+    # Aplica filtros
+    if status_filter != 'todos':
+        relatos = [r for r in relatos if r.get('status', 'pendente') == status_filter]
+    
+    if categoria_filter != 'todos':
+        relatos = [r for r in relatos if r.get('categoria') == categoria_filter]
+    
+    # Ordena por data
+    relatos.sort(key=lambda r: r.get('data', 0), reverse=True)
+    
+    # Categorias disponíveis
+    categorias = set(r.get('categoria', 'Outro') for r in carregar_dados(RELATOS_PATH, []))
+    
+    return render_template('admin/reports.html', 
+                         relatos=relatos, 
+                         status_filter=status_filter,
+                         categoria_filter=categoria_filter,
+                         categorias=sorted(categorias))
+
+
+@app.route("/admin/reports/<relato_id>/resolve", methods=['POST'])
+@admin_required
+def admin_resolve_report(relato_id):
+    relatos = carregar_dados(RELATOS_PATH, [])
+    
+    for relato in relatos:
+        if relato.get('id') == relato_id:
+            relato['status'] = 'resolvido'
+            relato['resolvido_por'] = g.user['nome']
+            relato['resolvido_em'] = agora_timestamp()
+            break
+    
+    with open(RELATOS_PATH, 'w', encoding='utf-8') as f:
+        json.dump(relatos, f, ensure_ascii=False, indent=2)
+    
+    flash('Relato marcado como resolvido.', 'success')
+    return redirect(url_for('admin_reports'))
+
+
+@app.route("/admin/reports/<relato_id>/delete", methods=['POST'])
+@admin_required
+def admin_delete_report(relato_id):
+    relatos = carregar_dados(RELATOS_PATH, [])
+    relatos = [r for r in relatos if r.get('id') != relato_id]
+    
+    with open(RELATOS_PATH, 'w', encoding='utf-8') as f:
+        json.dump(relatos, f, ensure_ascii=False, indent=2)
+    
+    flash('Relato excluído permanentemente.', 'success')
+    return redirect(url_for('admin_reports'))
+
+
+# --- Comunicação ---
+@app.route("/admin/communication", methods=['GET', 'POST'])
+@admin_required
+def admin_communication():
+    if request.method == 'POST':
+        titulo = request.form.get('titulo', '').strip()
+        mensagem = request.form.get('mensagem', '').strip()
+        destinatarios = request.form.get('destinatarios', 'todos')
+        
+        if not titulo or not mensagem:
+            flash('Título e mensagem são obrigatórios.', 'warning')
+            return redirect(url_for('admin_communication'))
+        
+        # Cria notificação/aviso
+        aviso = {
+            'id': str(uuid4()),
+            'titulo': titulo,
+            'mensagem': mensagem,
+            'data': agora_timestamp(),
+            'enviado_por': g.user['nome']
+        }
+        
+        # Salva em arquivo de avisos
+        AVISOS_PATH = os.path.join(DATA_DIR, 'avisos.json')
+        avisos = carregar_dados(AVISOS_PATH, [])
+        avisos.append(aviso)
+        salvar_dados(AVISOS_PATH, avisos)
+        
+        flash(f'Aviso "{titulo}" enviado com sucesso!', 'success')
+        return redirect(url_for('admin_communication'))
+    
+    # Lista avisos enviados
+    AVISOS_PATH = os.path.join(DATA_DIR, 'avisos.json')
+    avisos = carregar_dados(AVISOS_PATH, [])
+    avisos.sort(key=lambda a: a.get('data', 0), reverse=True)
+    
+    return render_template('admin/communication.html', avisos=avisos)
+
+
+# --- Logs ---
+@app.route("/admin/logs")
+@admin_required
+def admin_logs():
+    # Sistema de logs de auditoria
+    LOGS_PATH = os.path.join(DATA_DIR, 'admin_logs.json')
+    logs = carregar_dados(LOGS_PATH, [])
+    logs.sort(key=lambda l: l.get('timestamp', 0), reverse=True)
+    
+    # Limita a 100 logs mais recentes
+    logs = logs[:100]
+    
+    return render_template('admin/logs.html', logs=logs)
+
+
+def registrar_log_admin(acao, detalhes=''):
+    """Registra ação administrativa"""
+    LOGS_PATH = os.path.join(DATA_DIR, 'admin_logs.json')
+    logs = carregar_dados(LOGS_PATH, [])
+    
+    log = {
+        'id': str(uuid4()),
+        'timestamp': agora_timestamp(),
+        'admin_id': g.user['id'],
+        'admin_nome': g.user['nome'],
+        'acao': acao,
+        'detalhes': detalhes
+    }
+    
+    logs.append(log)
+    salvar_dados(LOGS_PATH, logs)
+
+
+# --- Configurações ---
+@app.route("/admin/settings", methods=['GET', 'POST'])
+@admin_required
+def admin_settings():
+    SETTINGS_PATH = os.path.join(DATA_DIR, 'settings.json')
+    settings = carregar_dados(SETTINGS_PATH, {
+        'site_name': 'FlashStudy',
+        'max_cards_per_deck': 100,
+        'max_ai_cards': 15,
+        'enable_registration': True,
+        'maintenance_mode': False
+    })
+    
+    if request.method == 'POST':
+        settings['site_name'] = request.form.get('site_name', 'FlashStudy')
+        settings['max_cards_per_deck'] = int(request.form.get('max_cards_per_deck', 100))
+        settings['max_ai_cards'] = int(request.form.get('max_ai_cards', 15))
+        settings['enable_registration'] = request.form.get('enable_registration') == 'on'
+        settings['maintenance_mode'] = request.form.get('maintenance_mode') == 'on'
+        
+        salvar_dados(SETTINGS_PATH, settings)
+        registrar_log_admin('Configurações alteradas', json.dumps(settings))
+        
+        flash('Configurações atualizadas com sucesso!', 'success')
+        return redirect(url_for('admin_settings'))
+    
+    return render_template('admin/settings.html', settings=settings)
 
 
 # --- Execução ---

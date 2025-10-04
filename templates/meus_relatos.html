@@ -33,15 +33,18 @@
       {% else %}Sem imagem{% endif %}
     </div>
     <div style="margin-top:8px;"><strong>📝 Descrição:</strong> {{ relato.descricao }}</div>
-  {% set tempo_restante = 1800 - (datetime.utcnow().timestamp() - relato.data if relato.data else 0) %}
     <form method="POST" action="{{ url_for('cancelar_relato', relato_id=relato.id) }}" style="margin-top:12px;display:inline;">
       <button type="submit"
-        {% if tempo_restante <= 0 or relato.status == 'cancelado' %}disabled style="background:#444;color:#bbb;cursor:not-allowed;"{% else %}style="background:#e11d48;color:#fff;" onclick="return confirm('Você tem certeza que quer cancelar este relato?')"{% endif %}>
+        {% if not relato.pode_cancelar %}disabled style="background:#444;color:#bbb;cursor:not-allowed;"{% else %}style="background:#e11d48;color:#fff;" onclick="return confirm('Você tem certeza que quer cancelar este relato?')"{% endif %}>
         🛑 Cancelar envio
       </button>
     </form>
     <div style="font-size:small;color:#555; margin-top:4px;">
-      ℹ️ Você pode cancelar o envio dentro de 30 minutos após o envio. Após esse prazo, o botão será desativado.
+      {% if relato.pode_cancelar %}
+        ⏳ Tempo restante para cancelar: {{ relato.tempo_restante_segundos // 60 }}m {{ relato.tempo_restante_segundos % 60 }}s
+      {% else %}
+        ℹ️ Você pode cancelar o envio dentro de 30 minutos após o envio. {% if relato.status == 'cancelado' %}Este relato já foi cancelado.{% else %}O prazo para cancelamento expirou.{% endif %}
+      {% endif %}
     </div>
     {% if relato.status == 'cancelado' %}
       <form method="post" action="{{ url_for('ocultar_relato', relato_id=relato.id) }}" style="display:inline;">
